@@ -1,8 +1,6 @@
-# Govt. Sandipani HSS School Damoh - crawler rules
 User-agent: *
 Allow: /
 
-# Private/admin interfaces should not be indexed.
 Disallow: /admin.html
 Disallow: /admin-advanced.html
 Disallow: /marks-entry.html
