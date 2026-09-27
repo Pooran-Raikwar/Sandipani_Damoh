@@ -1,0 +1,62 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guest Lecture Report</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef2f7;font-family:Arial,sans-serif;color:#111}.app{max-width:1150px;margin:18px auto;padding:16px}.card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 12px #0001}
+h1{margin:0 0 5px;text-align:center;font-size:24px}.sub{text-align:center;font-size:12px;color:#667}h2{font-size:18px;margin:20px 0 10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.full{grid-column:1/-1}label{display:block;font-size:13px;font-weight:bold;margin-bottom:4px}
+input,select,textarea,button{font:inherit}input,select,textarea{width:100%;padding:9px;border:1px solid #b9c3cd;border-radius:6px}textarea{min-height:65px;resize:vertical}
+.buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:15px}button{padding:10px;border:1px solid #aeb8c2;border-radius:6px;background:#f5f7f9;font-weight:bold}.status{margin-top:10px;padding:9px;background:#f1f4f7;border-radius:6px}
+.list{width:100%;border-collapse:collapse;margin-top:8px}.list th,.list td{border:1px solid #ccd3da;padding:7px;font-size:12px}.list th{background:#f0f2f4}
+#printPages{display:none}
+.print-page{width:210mm;height:297mm;background:#fff;padding:10mm 10mm;overflow:hidden;page-break-after:always;color:#000}
+.print-page:last-child{page-break-after:auto}.r-title{text-align:center;font-size:22px;font-weight:700;margin:0 0 6mm}
+.r-school{text-align:center;font-size:15px;font-weight:700;margin-bottom:6mm}
+.r-table{width:100%;border-collapse:collapse}.r-table td{border:1px solid #000;padding:3.6mm 3.5mm;font-size:14px;line-height:1.28;vertical-align:top}
+.meta-row td{padding:0!important}.meta-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1.35fr 1fr}.meta-grid>div{padding:3.2mm 3mm;border-right:1px solid #000;font-size:14px;line-height:1.25}.meta-grid>div:last-child{border-right:0}.attendance-line{padding:2.5mm 3mm;border-top:1px solid #000;font-size:14px}.num{width:10mm;text-align:center;font-weight:700}.label{width:62mm;font-weight:700}.plain-sign{border:0!important;margin-top:5mm}.sig-space{height:18mm;display:flex;justify-content:space-between;align-items:flex-end;font-size:13px;font-weight:700}.plain-bottom{display:flex;justify-content:space-between;font-weight:700;font-size:13px;margin-top:4mm}
+@media(max-width:750px){.grid,.buttons{grid-template-columns:1fr}.app{padding:8px}}
+@media print{@page{size:A4 portrait;margin:0}html,body{margin:0!important;padding:0!important;background:#fff!important}.app{display:none!important}#printPages{display:block!important}.print-page{margin:0}}
+</style></head><body>
+<div class="app"><div class="card">
+<h1>GUEST LECTURE REPORT – AUTOMATIC SYSTEM</h1><div class="sub">Original report structure preserved • Larger readable font • One report on one A4 page</div>
+<h2>Report Details</h2><div class="grid">
+<div><label>Name Of The School</label><input id="school" value="Government Sandipani Higher Secondary School Damoh"></div>
+<div><label>Date</label><input id="date" type="date"></div>
+<div><label>Trade</label><input id="trade" value="IT-ITes"></div><div><label>Attendance</label><input id="attendance" type="number"></div>
+<div><label>Class</label><select id="cls"><option>9th</option><option>10th</option><option>11th</option><option>12th</option></select></div>
+<div><label>Duration of Lecture</label><input id="duration" value="12:30 to 02:00 = 90 minutes"></div>
+<div><label>Name of Guest Lecturer</label><input id="lecturer"></div><div><label>Designation and Institution of the Guest Lecturer</label><input id="designation"></div>
+<div class="full"><label>Topic Covered</label><textarea id="topic"></textarea></div>
+<div class="full"><label>Question Raised by Student</label><textarea id="questions"></textarea></div>
+<div><label>Feedback of the Guest Lecture about the Student / Program in general</label><textarea id="guestFeedback"></textarea></div>
+<div><label>Feedback of the student about the topics covered, depth of information shared, method of teaching, about the guest lecturer</label><textarea id="studentFeedback"></textarea></div>
+<div class="full"><label>Remarks of teacher about the Guest Lecture on the following:</label><textarea id="teacherRemarks" placeholder="1. Method of teaching&#10;2. Topics covered or not as per the planned&#10;3. Depth of information covered&#10;4. Overall feedback about the session"></textarea></div>
+<div><label>Picture attached or Not</label><select id="picture"><option>Yes</option><option>No</option></select></div>
+<div><label>Overall Feedback about the Guest Lecture conduct</label><textarea id="overall"></textarea></div>
+<div><label>Name of Trainer</label><input id="trainer" value="Pooran Raikwar"></div><div><label>Name of Principal</label><input id="principal"></div>
+</div>
+<div class="buttons"><button onclick="newR()">NEW</button><button onclick="saveR()">SAVE</button><button onclick="generate()">GENERATE</button><button onclick="printR()">PRINT / PDF</button><button onclick="clearF()">CLEAR</button><button onclick="generateAll()">GENERATE ALL</button><button onclick="exportCSV()">EXPORT RECORDS</button><button onclick="deleteAll()">DELETE ALL</button></div>
+<div id="status" class="status">Ready.</div><h2>Saved Reports</h2><table class="list"><thead><tr><th>ID</th><th>Date</th><th>Class</th><th>Lecturer</th><th>Topic</th><th>Action</th></tr></thead><tbody id="list"></tbody></table>
+</div></div><div id="printPages"></div>
+<script>
+const $=id=>document.getElementById(id);let currentId="";
+const get=()=>JSON.parse(localStorage.getItem("guestLectureReportsExact")||"[]");
+const msg=x=>$("status").textContent=x;
+function today(){let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function dtext(x){if(!x)return"";let p=x.split("-");return p[2]+"-"+p[1]+"-"+p[0]}$("date").value=today();
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function data(){let a=get(),n=a.length+1,id=currentId||"GLR-"+String(n).padStart(4,"0");while(!currentId&&a.some(x=>x.id==id)){n++;id="GLR-"+String(n).padStart(4,"0")}return{id,school:$("school").value,date:$("date").value,trade:$("trade").value,attendance:$("attendance").value,cls:$("cls").value,duration:$("duration").value,lecturer:$("lecturer").value,designation:$("designation").value,topic:$("topic").value,questions:$("questions").value,guestFeedback:$("guestFeedback").value,studentFeedback:$("studentFeedback").value,teacherRemarks:$("teacherRemarks").value,picture:$("picture").value,overall:$("overall").value,trainer:$("trainer").value,principal:$("principal").value}}
+function valid(){if(!$("date").value||!$("lecturer").value.trim()||!$("topic").value.trim()){alert("Please fill Date, Guest Lecturer and Topic.");return false}return true}
+function saveR(){if(!valid())return;let r=data(),a=get(),i=a.findIndex(x=>x.id==r.id);if(i>=0)a[i]=r;else a.push(r);localStorage.setItem("guestLectureReportsExact",JSON.stringify(a));currentId=r.id;render();makePages([r]);msg((i>=0?"Updated ":"Saved ")+r.id)}
+function generate(){if(!valid())return;makePages([data()]);msg("Generated: one report = one A4 page.")}
+function printR(){if(!valid())return;makePages([data()]);setTimeout(()=>window.print(),100)}
+function generateAll(){let a=get();if(!a.length){alert("No saved reports.");return}makePages(a);msg(a.length+" reports ready; each report is a separate A4 page.");setTimeout(()=>window.print(),100)}
+function clearF(){["attendance","lecturer","designation","topic","questions","guestFeedback","studentFeedback","teacherRemarks","overall","principal"].forEach(x=>$(x).value="");$("date").value=today();$("trade").value="IT-ITes";$("trainer").value="Pooran Raikwar";$("picture").value="Yes";currentId="";msg("Form cleared.")}
+function newR(){clearF();msg("New report ready.")}
+function row(n,l,v){return '<tr><td class="num">'+n+'</td><td class="label">'+esc(l)+'</td><td>'+esc(v).replace(/\\n/g,"<br>")+'</td></tr>'}
+function make(r){let d=document.createElement("div");d.className="print-page";d.innerHTML='<div class="r-title">GUEST LECTURE REPORT</div><div class="r-school">Name Of The School: '+esc(r.school)+'</div><table class="r-table"><tr class="meta-row"><td colspan="3"><div class="meta-grid"><div><b>Date</b><br>'+esc(dtext(r.date))+'</div><div><b>Trade</b><br>'+esc(r.trade)+'</div><div><b>Class</b><br>'+esc(r.cls)+'</div><div><b>Duration of Lecture</b><br>'+esc(r.duration)+'</div><div><b>Attendance</b><br>'+esc(r.attendance)+'</div></div></td></tr>'+row("1","Name of Guest Lecturer",r.lecturer)+row("2","Designation and Institution of the Guest Lecturer",r.designation)+row("3","Topic Covered",r.topic)+row("4","Question Raised by Student",r.questions)+row("5","Feedback of the Guest Lecture about the Student / Program in general",r.guestFeedback)+row("6","Feedback of the student about the topics covered, depth of information shared, method of teaching, about the guest lecturer",r.studentFeedback)+row("7","Remarks of teacher about the Guest Lecture on the following: 1. Method of teaching  2. Topics covered or not as per the planned  3. Depth of information covered  4. Overall feedback about the session",r.teacherRemarks)+row("8","Picture attached or Not",r.picture)+row("9","Overall Feedback about the Guest Lecture conduct",r.overall)+'</table><div class="plain-sign"><div class="sig-space"><span>(Signature of Trainer)</span><span>(Signature of Principal &amp; Seal of School)</span></div><div class="plain-bottom"><span>Name of Trainer : '+esc(r.trainer)+'</span><span>Name of Principal : '+esc(r.principal)+'</span></div></div>';return d}
+function makePages(a){$("printPages").innerHTML="";a.forEach(r=>$("printPages").appendChild(make(r)))}
+function load(id){let r=get().find(x=>x.id==id);if(!r)return;currentId=id;Object.keys(r).forEach(k=>{if($(k))$(k).value=r[k]});makePages([r]);msg("Loaded "+id)}
+function render(){let a=get();$("list").innerHTML=a.map(r=>'<tr><td>'+esc(r.id)+'</td><td>'+esc(dtext(r.date))+'</td><td>'+esc(r.cls)+'</td><td>'+esc(r.lecturer)+'</td><td>'+esc(r.topic)+'</td><td><button type="button" data-id="'+esc(r.id)+'">EDIT / VIEW</button></td></tr>').join("")||'<tr><td colspan="6">No saved reports.</td></tr>';document.querySelectorAll("#list button[data-id]").forEach(b=>b.addEventListener("click",()=>load(b.dataset.id)))}
+function exportCSV(){let a=get();if(!a.length){alert("No records.");return}let k=["id","date","trade","attendance","cls","duration","lecturer","designation","topic","questions","guestFeedback","studentFeedback","teacherRemarks","picture","overall","trainer","principal"];let c=k.join(",")+"\\n"+a.map(r=>k.map(x=>'"'+String(r[x]??"").replaceAll('"','""')+'"').join(",")).join("\\n");let u=URL.createObjectURL(new Blob([c],{type:"text/csv"}));let z=document.createElement("a");z.href=u;z.download="Guest_Lecture_Reports.csv";z.click();URL.revokeObjectURL(u)}
+function deleteAll(){if(confirm("Delete all saved reports?")){localStorage.removeItem("guestLectureReportsExact");render();msg("All reports deleted.")}}render();
+</script></body></html>

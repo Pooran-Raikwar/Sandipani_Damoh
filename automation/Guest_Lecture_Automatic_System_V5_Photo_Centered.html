@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guest Lecture Automation System V2</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#18212b}
+.app{max-width:1100px;margin:20px auto;padding:18px}
+.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 12px #0001}
+h1{margin:0 0 5px;font-size:25px}
+h2{font-size:18px;margin:22px 0 10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.full{grid-column:1/-1}
+label{font-weight:700;font-size:14px}
+input,select,button{width:100%;padding:11px;border:1px solid #bcc7d3;border-radius:7px;font-size:14px;background:#fff}
+button{cursor:pointer;font-weight:700}
+.buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:18px}
+.status{margin-top:12px;padding:10px;background:#f4f7fa;border-radius:7px;min-height:40px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #d5dce3;padding:8px;text-align:left;font-size:13px}
+th{background:#f0f3f6}
+.small{font-size:12px;color:#5c6875}
+.photo-preview{max-height:90px;max-width:150px;margin-top:7px;border:1px solid #ddd}
+
+#printPages{display:none}
+
+/* Exact A4-style print area based on the supplied original format:
+   one guest lecture = one A4 page */
+.print-page{
+  width:210mm;
+  height:297mm;
+  position:relative;
+  background:#fff;
+  padding:12mm 10mm 10mm 10mm;
+  overflow:hidden;
+  font-family:Arial,sans-serif;
+  color:#000;
+}
+.print-title{
+  text-align:center;
+  font-size:17px;
+  font-weight:700;
+  margin:0 0 7mm;
+  line-height:1.1;
+}
+.print-meta{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  column-gap:8mm;
+  font-size:15px;
+  font-weight:700;
+  line-height:1.25;
+  margin:0 14mm;
+}
+.print-meta .date{text-align:right}
+.print-topic{
+  font-size:15px;
+  font-weight:700;
+  margin:4mm 14mm 9mm;
+  line-height:1.25;
+}
+.print-photo{
+  width:100%;
+  height:155mm;
+  position:relative;
+  top:15mm;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  margin:0;
+}
+.print-photo img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
+.no-photo{
+  font-size:14px;
+  color:#777;
+}
+.print-signatures{
+  position:absolute;
+  left:14mm;
+  right:14mm;
+  bottom:10mm;
+  font-size:15px;
+  font-weight:700;
+}
+.sig-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  column-gap:20mm;
+}
+.sig-left{text-align:left}
+.sig-right{text-align:right}
+.sig-space{height:13mm}
+
+@media(max-width:700px){
+  .grid,.buttons{grid-template-columns:1fr}
+  .app{padding:8px}
+}
+
+@media print{
+  @page{size:A4 portrait;margin:0}
+  html,body{margin:0!important;padding:0!important;background:#fff!important}
+  body{width:210mm}
+  .app{display:none!important}
+  #printPages{
+    display:block!important;
+    width:210mm;
+    margin:0;
+    padding:0;
+  }
+  .print-page{
+    page-break-after:always;
+    break-after:page;
+  }
+  .print-page:last-child{
+    page-break-after:auto;
+    break-after:auto;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="card">
+    <h1>GUEST LECTURE AUTOMATION SYSTEM</h1>
+    <div class="small">Offline system — data stays in this browser on this laptop.</div>
+
+    <h2>Current Lecture Inputs</h2>
+    <div class="grid">
+      <div>
+        <label>Class *</label>
+        <select id="cls">
+          <option value="">Select Class</option>
+          <option>9th</option><option>10th</option><option>11th</option><option>12th</option>
+        </select>
+      </div>
+      <div><label>Lecturer Name *</label><input id="lecturer"></div>
+      <div><label>Date *</label><input id="date" type="date"></div>
+      <div><label>Topic *</label><input id="topic"></div>
+      <div><label>Photo</label><input id="photo" type="file" accept="image/*"><img id="preview" class="photo-preview" hidden></div>
+      <div><label>Teacher Name</label><input id="teacher" value="Pooran Raikwar"></div>
+      <div><label>Principal Name</label><input id="principal"></div>
+    </div>
+
+    <div class="buttons">
+      <button onclick="newForm()">NEW</button>
+      <button onclick="saveRecord()">SAVE</button>
+      <button onclick="generate()">GENERATE</button>
+      <button onclick="printCurrent()">PRINT / PDF</button>
+      <button onclick="clearForm()">CLEAR</button>
+      <button onclick="generateAll()">GENERATE ALL</button>
+      <button onclick="exportCSV()">EXPORT RECORDS</button>
+      <button onclick="clearRecords()">DELETE ALL RECORDS</button>
+    </div>
+
+    <div id="status" class="status">Ready.</div>
+
+    <h2>Saved Records</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Date</th><th>Class</th><th>Lecturer</th><th>Topic</th><th>Action</th></tr></thead>
+      <tbody id="records"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="printPages"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+let photoData="";
+let currentRecordId="";
+
+function records(){
+  return JSON.parse(localStorage.getItem("guestLectureRecords")||"[]");
+}
+function setStatus(x){$("status").textContent=x;}
+
+function todayISO(){
+  const d=new Date();
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function displayDate(iso){
+  if(!iso)return "";
+  const p=iso.split("-");
+  return p.length===3 ? `${p[2]}-${p[1]}-${p[0]}` : iso;
+}
+
+$("date").value=todayISO();
+
+$("photo").addEventListener("change",e=>{
+  const f=e.target.files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    photoData=r.result;
+    $("preview").src=photoData;
+    $("preview").hidden=false;
+  };
+  r.readAsDataURL(f);
+});
+
+function newForm(){
+  clearForm();
+  $("date").value=todayISO();
+  setStatus("New lecture form ready.");
+}
+
+function clearForm(){
+  ["cls","lecturer","topic","principal"].forEach(id=>$(id).value="");
+  $("teacher").value="Pooran Raikwar";
+  $("date").value=todayISO();
+  $("photo").value="";
+  photoData="";
+  currentRecordId="";
+  $("preview").hidden=true;
+  setStatus("Form cleared.");
+}
+
+function valid(){
+  if(!$("cls").value||!$("lecturer").value.trim()||!$("date").value||!$("topic").value.trim()){
+    alert("Please fill Class, Lecturer Name, Date and Topic.");
+    return false;
+  }
+  return true;
+}
+
+function makeId(){
+  const a=records();
+  let n=a.length+1;
+  while(a.some(r=>r.id==="GL-"+String(n).padStart(4,"0"))) n++;
+  return "GL-"+String(n).padStart(4,"0");
+}
+
+function current(){
+  return {
+    id:currentRecordId||makeId(),
+    class:$("cls").value,
+    lecturer:$("lecturer").value.trim(),
+    date:$("date").value,
+    topic:$("topic").value.trim(),
+    teacher:$("teacher").value.trim(),
+    principal:$("principal").value.trim(),
+    photo:photoData
+  };
+}
+
+function saveRecord(){
+  if(!valid())return;
+  const a=records(), r=current();
+  const idx=a.findIndex(x=>x.id===r.id);
+  if(idx>=0) a[idx]=r; else a.push(r);
+  localStorage.setItem("guestLectureRecords",JSON.stringify(a));
+  currentRecordId=r.id;
+  setStatus((idx>=0?"Updated ":"Saved ")+r.id);
+  render();
+  renderPrintPages([r]);
+}
+
+function generate(){
+  if(!valid())return;
+  const r=current();
+  renderPrintPages([r]);
+  setStatus("Print-ready A4 page generated. One lecture = one page.");
+}
+
+function printCurrent(){
+  if(!valid())return;
+  const r=current();
+  renderPrintPages([r]);
+  setTimeout(()=>window.print(),100);
+}
+
+function generateAll(){
+  const a=records();
+  if(!a.length){alert("No saved records.");return;}
+  renderPrintPages(a);
+  setStatus(a.length+" guest lecture page(s) generated. Each lecture will print on a separate A4 page.");
+  setTimeout(()=>window.print(),100);
+}
+
+function makePrintPage(r){
+  const page=document.createElement("div");
+  page.className="print-page";
+
+  const title=document.createElement("div");
+  title.className="print-title";
+  title.innerHTML="Guest Lecture "+esc(r.class);
+  page.appendChild(title);
+
+  const meta=document.createElement("div");
+  meta.className="print-meta";
+  meta.innerHTML=
+    '<div>Lecturer Name- '+esc(r.lecturer)+'</div>'+
+    '<div class="date">Date – '+esc(displayDate(r.date))+'</div>';
+  page.appendChild(meta);
+
+  const topic=document.createElement("div");
+  topic.className="print-topic";
+  topic.innerHTML="Topic-"+esc(r.topic);
+  page.appendChild(topic);
+
+  const photo=document.createElement("div");
+  photo.className="print-photo";
+  if(r.photo){
+    const img=document.createElement("img");
+    img.src=r.photo;
+    img.alt="Guest Lecture Photo";
+    photo.appendChild(img);
+  }else{
+    const np=document.createElement("div");
+    np.className="no-photo";
+    np.textContent="GUEST LECTURE PHOTO";
+    photo.appendChild(np);
+  }
+  page.appendChild(photo);
+
+  const sig=document.createElement("div");
+  sig.className="print-signatures";
+  sig.innerHTML=
+    '<div class="sig-row">'+
+      '<div class="sig-left">Signature of Teacher</div>'+
+      '<div class="sig-right"></div>'+
+    '</div>'+
+    '<div class="sig-space"></div>'+
+    '<div class="sig-row">'+
+      '<div class="sig-left">Name of Teacher – '+esc(r.teacher||"")+'</div>'+
+      '<div class="sig-right">Principal'+(r.principal?'<br>'+esc(r.principal):"")+'</div>'+
+    '</div>';
+  page.appendChild(sig);
+
+  return page;
+}
+
+function renderPrintPages(list){
+  const box=$("printPages");
+  box.innerHTML="";
+  list.forEach(r=>box.appendChild(makePrintPage(r)));
+}
+
+function loadRecord(id){
+  const r=records().find(x=>x.id===id);
+  if(!r)return;
+  $("cls").value=r.class;
+  $("lecturer").value=r.lecturer;
+  $("date").value=r.date;
+  $("topic").value=r.topic;
+  $("teacher").value=r.teacher||"Pooran Raikwar";
+  $("principal").value=r.principal||"";
+  photoData=r.photo||"";
+  currentRecordId=r.id;
+  if(photoData){
+    $("preview").src=photoData;
+    $("preview").hidden=false;
+  }else $("preview").hidden=true;
+  renderPrintPages([r]);
+  setStatus("Loaded "+id);
+}
+
+function render(){
+  const a=records();
+  $("records").innerHTML=a.map(r=>
+    `<tr>
+      <td>${esc(r.id)}</td><td>${esc(displayDate(r.date))}</td><td>${esc(r.class)}</td>
+      <td>${esc(r.lecturer)}</td><td>${esc(r.topic)}</td>
+      <td><button onclick="loadRecord('${esc(r.id)}')">EDIT / VIEW</button></td>
+    </tr>`
+  ).join("")||'<tr><td colspan="6">No records yet.</td></tr>';
+}
+
+function esc(s){
+  return String(s??"").replace(/[&<>"']/g,m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+
+function exportCSV(){
+  const a=records();
+  if(!a.length){alert("No records.");return;}
+  let csv="ID,Date,Class,Lecturer,Topic,Teacher,Principal\n"+
+    a.map(r=>[r.id,r.date,r.class,r.lecturer,r.topic,r.teacher,r.principal]
+      .map(x=>`"${String(x??"").replaceAll('"','""')}"`).join(",")).join("\n");
+  const b=new Blob([csv],{type:"text/csv"});
+  const u=URL.createObjectURL(b);
+  const x=document.createElement("a");
+  x.href=u;x.download="Guest_Lecture_Records.csv";x.click();
+  URL.revokeObjectURL(u);
+}
+
+function clearRecords(){
+  if(confirm("Delete all saved records from this browser?")){
+    localStorage.removeItem("guestLectureRecords");
+    render();
+    setStatus("All records deleted.");
+  }
+}
+
+render();
+</script>
+</body>
+</html>

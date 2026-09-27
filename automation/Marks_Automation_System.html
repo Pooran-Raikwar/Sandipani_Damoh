@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marks Automation System</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#17202a}
+header{background:#17365d;color:#fff;padding:18px}header h1{margin:0;font-size:24px}header p{margin:6px 0 0}
+.wrap{max-width:1200px;margin:auto;padding:15px}.card{background:#fff;padding:18px;margin-bottom:15px;border-radius:12px;box-shadow:0 2px 10px #0001}
+h2{margin:0 0 14px;font-size:20px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+label{font-size:13px;font-weight:bold;display:block;margin-bottom:5px}
+input,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:7px;font-size:14px;background:#fff}
+button{border:0;border-radius:7px;padding:10px 14px;font-weight:bold;cursor:pointer;margin:5px 5px 0 0}.primary{background:#17365d;color:#fff}.green{background:#198754;color:#fff}.gray{background:#64748b;color:#fff}.red{background:#c0392b;color:#fff}.light{background:#e2e8f0}
+.info{background:#eef5ff;border-left:4px solid #17365d;padding:10px;margin:10px 0;font-size:13px}.small{font-size:12px;color:#64748b}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:end}.actions>div{min-width:160px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.stat{background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:8px;text-align:center}.stat b{display:block;font-size:20px;margin-top:4px}
+.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:1150px}th,td{border:1px solid #dbe2ea;padding:8px;font-size:12px;text-align:center}th{background:#17365d;color:#fff}
+.pass{color:#16803c;font-weight:bold}.fail{color:#c0392b;font-weight:bold}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.grid{grid-template-columns:1fr}}
+@media print{header,.entry,.filters,.no-print{display:none!important}body{background:#fff}.card{box-shadow:none}.tablewrap{overflow:visible}table{min-width:0;font-size:9px}}
+</style>
+</head>
+<body>
+<header><div style="max-width:1200px;margin:auto"><h1>📊 Marks Automation System</h1><p>Form से marks submit करें → Result automatic बनेगा</p></div></header>
+<div class="wrap">
+
+<section class="card entry">
+<h2>1. Student Marks Entry Form</h2>
+<div class="info">9th/10th: Theory 40% = /40 + Practical /60. &nbsp; | &nbsp; 11th/12th: Theory 50% = /50 + Practical /50.</div>
+<form id="marksForm">
+<div class="grid">
+<div><label>Class *</label><select id="className" required><option value="">Select Class</option><option value="9th">9th</option><option value="10th">10th</option><option value="11th">11th</option><option value="12th">12th</option></select></div>
+<div><label>Subject *</label><input id="subject" required placeholder="e.g. IT / Employability Skills"></div>
+<div><label>Roll No. *</label><input id="roll" type="number" min="1" required></div>
+<div><label>Student Name *</label><input id="student" required></div>
+<div><label>Father's Name</label><input id="father"></div>
+<div><label>Theory Marks /100 *</label><input id="theory" type="number" min="0" max="100" step="0.01" required></div>
+<div><label id="practicalEntryLabel">Practical Marks *</label><input id="practical" type="number" min="0" step="0.01" required></div>
+<div><label>Exam/Term</label><input id="term" placeholder="Unit Test / Annual"></div>
+</div>
+<button class="primary" type="submit">➕ Submit Marks</button>
+<button class="light" type="button" id="clearBtn">Clear Form</button>
+</form>
+<p class="small">Records इसी browser में save होते हैं।</p>
+</section>
+
+<section class="card filters">
+<h2>2. Result & Filters</h2>
+<div class="actions">
+<div><label>Class Filter</label><select id="filterClass"><option value="">All Classes</option><option>9th</option><option>10th</option><option>11th</option><option>12th</option></select></div>
+<div><label>Subject Filter</label><input id="filterSubject" placeholder="Subject"></div>
+<div><label>Search Student/Roll</label><input id="search" placeholder="Name or Roll"></div>
+<div><label>Sort</label><select id="sortBy"><option value="roll">Roll No.</option><option value="marks">Final Marks</option><option value="name">Name</option><option value="rank">Rank</option></select></div>
+</div>
+<button class="green no-print" id="exportBtn">⬇ Export Excel/CSV</button>
+<button class="gray no-print" id="printBtn">🖨 Print / Save PDF</button>
+<button class="red no-print" id="deleteAllBtn">🗑 Delete All Records</button>
+</section>
+
+<section class="card"><div class="stats">
+<div class="stat">Students <b id="sCount">0</b></div><div class="stat">Passed <b id="pCount">0</b></div>
+<div class="stat">Failed <b id="fCount">0</b></div><div class="stat">Average <b id="avg">0</b></div><div class="stat">Top Marks <b id="top">0</b></div>
+</div></section>
+
+<section class="card"><h2>3. Automatic Result</h2><div class="tablewrap">
+<table><thead><tr>
+<th>Rank</th><th>Class</th><th>Subject</th><th>Roll</th><th>Student Name</th><th>Father's Name</th>
+<th>Theory /100</th><th id="weightedHeader">Weighted Theory</th><th id="practicalHeader">Practical</th><th>Final /100</th><th>%</th><th>Grade</th><th>Status</th><th class="no-print">Action</th>
+</tr></thead><tbody id="resultBody"></tbody></table>
+</div></section>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="marksAutomationRecords_v2";
+var records=[];
+try{records=JSON.parse(localStorage.getItem(KEY)||"[]");if(!Array.isArray(records))records=[];}catch(e){records=[];}
+
+function $(id){return document.getElementById(id);}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(records));}catch(e){alert("Browser storage उपलब्ध नहीं है। फिर भी record table में add होगा.");}}
+function calc(r){
+ var is910=(r.className==="9th"||r.className==="10th");
+ var maxP=is910?60:50;
+ var weighted=Math.ceil((Number(r.theory)||0)*(is910?.4:.5));
+ var practical=Number(r.practical)||0;
+ var final=Math.min(100,weighted+practical);
+ var grade=final>=90?"A+":final>=80?"A":final>=70?"B+":final>=60?"B":final>=50?"C":final>=33?"D":"F";
+ return {weighted:weighted,final:final,pct:final,grade:grade,status:final>=33?"PASS":"FAIL",maxP:maxP};
+}
+function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m];});}
+function updateHeaders(){
+ var c=$("filterClass").value;
+ $("weightedHeader").textContent=c==="9th"||c==="10th"?"Weighted Theory /40":c==="11th"||c==="12th"?"Weighted Theory /50":"Weighted Theory";
+ $("practicalHeader").textContent=c==="9th"||c==="10th"?"Practical /60":c==="11th"||c==="12th"?"Practical /50":"Practical";
+ var entry=$("className").value;
+ $("practicalEntryLabel").textContent=entry==="9th"||entry==="10th"?"Practical Marks /60 *":entry==="11th"||entry==="12th"?"Practical Marks /50 *":"Practical Marks *";
+ $("practical").max=entry==="9th"||entry==="10th"?60:entry==="11th"||entry==="12th"?50:"";
+}
+function filtered(){
+ var fc=$("filterClass").value, fs=$("filterSubject").value.toLowerCase(), q=$("search").value.toLowerCase();
+ var a=records.filter(function(r){return (!fc||r.className===fc)&&(!fs||r.subject.toLowerCase().indexOf(fs)>=0)&&(!q||String(r.roll).indexOf(q)>=0||r.student.toLowerCase().indexOf(q)>=0);});
+ var ranked=a.slice().sort(function(x,y){return calc(y).final-calc(x).final||x.roll-y.roll;});
+ var rankMap={};var last=null,rank=0;
+ ranked.forEach(function(r,i){var m=calc(r).final;if(m!==last){rank=i+1;last=m;}rankMap[r.id]=rank;});
+ var s=$("sortBy").value;
+ a.sort(function(x,y){if(s==="marks")return calc(y).final-calc(x).final;if(s==="name")return x.student.localeCompare(y.student);if(s==="rank")return rankMap[x.id]-rankMap[y.id];return x.roll-y.roll;});
+ return {a:a,rankMap:rankMap};
+}
+function render(){
+ updateHeaders();
+ var data=filtered(),a=data.a,rankMap=data.rankMap,body=$("resultBody");body.innerHTML="";
+ a.forEach(function(r){
+  var c=calc(r),tr=document.createElement("tr");
+  tr.innerHTML="<td>"+rankMap[r.id]+"</td><td>"+esc(r.className)+"</td><td>"+esc(r.subject)+"</td><td>"+r.roll+"</td><td>"+esc(r.student)+"</td><td>"+esc(r.father)+"</td><td>"+r.theory+"</td><td>"+c.weighted+"</td><td>"+r.practical+"</td><td><b>"+c.final+"</b></td><td>"+c.pct.toFixed(2)+"%</td><td>"+c.grade+"</td><td class='"+(c.status==="PASS"?"pass":"fail")+"'>"+c.status+"</td><td class='no-print'><button class='red' data-delete='"+r.id+"'>Delete</button></td>";
+  body.appendChild(tr);
+ });
+ $("sCount").textContent=a.length;$("pCount").textContent=a.filter(function(r){return calc(r).status==="PASS";}).length;$("fCount").textContent=a.filter(function(r){return calc(r).status==="FAIL";}).length;
+ $("avg").textContent=a.length?(a.reduce(function(s,r){return s+calc(r).final;},0)/a.length).toFixed(2):"0";
+ $("top").textContent=a.length?Math.max.apply(null,a.map(function(r){return calc(r).final;})):"0";
+}
+$("marksForm").addEventListener("submit",function(e){
+ e.preventDefault();
+ var cls=$("className").value, subj=$("subject").value.trim(), roll=Number($("roll").value), student=$("student").value.trim(), father=$("father").value.trim(), theory=Number($("theory").value), practical=Number($("practical").value), term=$("term").value.trim();
+ var maxP=(cls==="9th"||cls==="10th")?60:50;
+ if(!cls||!subj||!roll||!student){alert("कृपया * वाली सभी fields भरें।");return;}
+ if(!Number.isFinite(theory)||theory<0||theory>100){alert("Theory marks 0 से 100 के बीच रखें।");return;}
+ if(!Number.isFinite(practical)||practical<0||practical>maxP){alert("Practical marks maximum "+maxP+" हैं।");return;}
+ records.push({id:String(Date.now())+String(Math.random()).slice(2),className:cls,subject:subj,roll:roll,student:student,father:father,theory:theory,practical:practical,term:term});
+ save();render();this.reset();updateHeaders();$("className").focus();
+});
+$("className").addEventListener("change",updateHeaders);
+$("filterClass").addEventListener("change",render);$("filterSubject").addEventListener("input",render);$("search").addEventListener("input",render);$("sortBy").addEventListener("change",render);
+$("clearBtn").addEventListener("click",function(){$("marksForm").reset();updateHeaders();$("className").focus();});
+$("resultBody").addEventListener("click",function(e){var id=e.target.getAttribute("data-delete");if(id&&confirm("इस record को delete करें?")){records=records.filter(function(r){return String(r.id)!==String(id);});save();render();}});
+$("deleteAllBtn").addEventListener("click",function(){if(confirm("सभी records delete हो जाएंगे. Continue?")){records=[];save();render();}});
+$("printBtn").addEventListener("click",function(){window.print();});
+$("exportBtn").addEventListener("click",function(){
+ var d=filtered(),a=d.a,rm=d.rankMap;if(!a.length){alert("Export करने के लिए कोई record नहीं है।");return;}
+ var rows=[["Rank","Class","Subject","Roll No","Student Name","Father's Name","Theory /100","Weighted Theory","Practical","Final /100","Percentage","Grade","Status"]];
+ a.forEach(function(r){var c=calc(r);rows.push([rm[r.id],r.className,r.subject,r.roll,r.student,r.father,r.theory,c.weighted,r.practical,c.final,c.pct.toFixed(2)+"%",c.grade,c.status]);});
+ var csv="\ufeff"+rows.map(function(row){return row.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+ var blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),ael=document.createElement("a");ael.href=url;ael.download="Marks_Result.csv";document.body.appendChild(ael);ael.click();ael.remove();URL.revokeObjectURL(url);
+});
+render();
+})();
+</script>
+</body>
+</html>

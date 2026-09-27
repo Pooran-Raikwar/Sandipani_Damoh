@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Industry Visit Report Management System</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#eef1f5;color:#111}
+.app{max-width:1100px;margin:20px auto;padding:18px;background:white;border-radius:10px;box-shadow:0 2px 12px #bbb}
+h1{margin:0 0 15px;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+label{font-weight:700}
+input,textarea,select{width:100%;padding:9px;margin-top:5px;border:1px solid #aaa;border-radius:5px;font-size:14px}
+textarea{min-height:70px;resize:vertical}
+.full{grid-column:1/-1}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin:15px 0}
+button{padding:10px 14px;border:0;border-radius:5px;background:#222;color:#fff;cursor:pointer}
+button:hover{opacity:.9}
+#list{margin-top:10px}
+.item{display:flex;justify-content:space-between;align-items:center;border:1px solid #ccc;padding:8px;margin:5px 0;border-radius:5px}
+.item button{padding:6px 9px}
+#printPages{display:none}
+
+.print-page{width:210mm;height:297mm;background:#fff;padding:9mm 9mm;overflow:hidden;page-break-after:always;color:#000}
+.print-page:last-child{page-break-after:auto}
+.r-title{text-align:center;font-size:23px;font-weight:700;margin:0 0 4mm}
+.r-school{text-align:center;font-size:15px;font-weight:700;margin-bottom:5mm}
+.meta{width:100%;border-collapse:collapse;margin-bottom:3mm}
+.meta td{border:1px solid #000;padding:3mm 2mm;text-align:center;font-size:13px;font-weight:700;vertical-align:middle}
+.report{width:100%;border-collapse:collapse}
+.report td{border:1px solid #000;padding:3.2mm 3mm;font-size:13.5px;line-height:1.22;vertical-align:top}
+.num{width:9mm;text-align:center;font-weight:700}
+.label{width:62mm;font-weight:700}
+.signrow td{border:0!important;height:23mm;padding:2mm 0}
+.bottom td{border:0!important;font-weight:700;font-size:13px;padding:0}.bottom td:first-child{text-align:left}.bottom td:last-child{text-align:right}
+@media print{
+ @page{size:A4 portrait;margin:0}
+ html,body{margin:0!important;padding:0!important;background:#fff!important}
+ .app{display:none!important}
+ #printPages{display:block!important}
+ .print-page{margin:0}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>Industry Visit Report Management System</h1>
+<div class="grid">
+<div><label>School</label><input id="school" value="Govt Sandipani HSS School Damoh"></div>
+<div><label>Date</label><input id="date" type="date"></div>
+<div><label>Trade</label><input id="trade" value="IT/ITES"></div>
+<div><label>Attendance</label><input id="attendance" type="number"></div>
+<div><label>Classes covered</label><input id="classes" value="9th"></div>
+<div><label>Duration of Lecture</label><input id="duration" value="90 minutes"></div>
+
+<div class="full"><label>1. Name and address of the organization visited</label><textarea id="org"></textarea></div>
+<div class="full"><label>2. Name and designation of the industry personnel who interacted with the students</label><textarea id="personnel"></textarea></div>
+<div class="full"><label>3. Topics Covered</label><textarea id="topics"></textarea></div>
+<div class="full"><label>4. Questions asked by students</label><textarea id="questions"></textarea></div>
+<div class="full"><label>5. Feedback of the students about the topics covered.</label><textarea id="studentFeedback"></textarea></div>
+<div class="full"><label>6. Remarks of the Vocational Teacher about the effectiveness and usefulness of the Field Visit</label><textarea id="teacherRemarks"></textarea></div>
+<div class="full"><label>Topics covered or not, as per planed</label><textarea id="planned"></textarea></div>
+<div class="full"><label>Depth of Information covered</label><textarea id="depth"></textarea></div>
+<div class="full"><label>Overall Feedback about the industry visit</label><textarea id="overall"></textarea></div>
+<div><label>7. Attach the Pictures</label><select id="pictures"><option>Yes</option><option>No</option></select></div>
+<div><label>9. Attach Checklist for Field Visit Organized</label><select id="checklist"><option>Yes</option><option>No</option></select></div>
+<div class="full"><label>10. Overall Feedback of the Vocational teacher about the industry visit</label><textarea id="vocOverall"></textarea></div>
+<div><label>Vocational Trainer</label><input id="trainer" value="Pooran Raikwar"></div>
+<div><label>Principal</label><input id="principal"></div>
+</div>
+
+<div class="buttons">
+<button onclick="newReport()">NEW</button>
+<button onclick="saveReport()">SAVE</button>
+<button onclick="generate()">GENERATE</button>
+<button onclick="printReport()">PRINT / PDF</button>
+<button onclick="clearForm()">CLEAR</button>
+<button onclick="generateAll()">GENERATE ALL</button>
+<button onclick="exportCSV()">EXPORT RECORDS</button>
+<button onclick="deleteAll()">DELETE ALL</button>
+</div>
+<div id="msg"></div>
+<h3>Saved Reports</h3><div id="list"></div>
+</div>
+<div id="printPages"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+let currentId="";
+const KEY="industryVisitReportsV1";
+function get(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}}
+function today(){return new Date().toISOString().slice(0,10)}
+function esc(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function msg(t){$("msg").textContent=t}
+function dtext(v){if(!v)return"";let [y,m,d]=v.split("-");return d+"."+m+"."+y}
+function data(){
+ let a=get(), n=a.length+1, id=currentId||"IVR-"+String(n).padStart(4,"0");
+ while(!currentId&&a.some(x=>x.id===id)){n++;id="IVR-"+String(n).padStart(4,"0")}
+ return {id,school:$("school").value,date:$("date").value,trade:$("trade").value,attendance:$("attendance").value,classes:$("classes").value,duration:$("duration").value,org:$("org").value,personnel:$("personnel").value,topics:$("topics").value,questions:$("questions").value,studentFeedback:$("studentFeedback").value,teacherRemarks:$("teacherRemarks").value,planned:$("planned").value,depth:$("depth").value,overall:$("overall").value,pictures:$("pictures").value,checklist:$("checklist").value,vocOverall:$("vocOverall").value,trainer:$("trainer").value,principal:$("principal").value}
+}
+function valid(){if(!$("date").value||!$("org").value.trim()){alert("Please fill Date and Organization visited.");return false}return true}
+function saveReport(){if(!valid())return;let r=data(),a=get(),i=a.findIndex(x=>x.id===r.id);if(i>=0)a[i]=r;else a.push(r);localStorage.setItem(KEY,JSON.stringify(a));currentId=r.id;render();makePages([r]);msg((i>=0?"Updated ":"Saved ")+r.id)}
+function generate(){if(!valid())return;makePages([data()]);msg("Generated: one report = one A4 page.")}
+function printReport(){if(!valid())return;makePages([data()]);setTimeout(()=>window.print(),100)}
+function newReport(){clearForm();msg("New report ready.")}
+function clearForm(){["attendance","org","personnel","topics","questions","studentFeedback","teacherRemarks","planned","depth","overall","vocOverall","principal"].forEach(id=>$(id).value="");$("date").value=today();$("trade").value="IT/ITES";$("classes").value="9th";$("duration").value="90 minutes";$("pictures").value="Yes";$("checklist").value="Yes";$("trainer").value="Pooran Raikwar";currentId=""}
+function row(n,l,v){return `<tr><td class="num">${n}</td><td class="label">${esc(l)}</td><td>${esc(v).replace(/\n/g,"<br>")}</td></tr>`}
+function make(r){
+ let d=document.createElement("div");d.className="print-page";
+ d.innerHTML=`<div class="r-title">Industry Visit Report</div>
+ <div class="r-school">Name of the School :- ${esc(r.school)}</div>
+ <table class="meta"><tr>
+ <td>Date<br>${esc(dtext(r.date))}</td><td>Trade<br>${esc(r.trade)}</td><td>Attendance<br>${esc(r.attendance)}</td><td>Classes covered<br>${esc(r.classes)}</td><td>Duration of Lecture<br>${esc(r.duration)}</td>
+ </tr></table>
+ <table class="report">
+ ${row(1,"Name and address of the organization visited",r.org)}
+ ${row(2,"Name and designation of the industry personnel who interacted with the students",r.personnel)}
+ ${row(3,"Topics Covered",r.topics)}
+ ${row(4,"Questions asked by students",r.questions)}
+ ${row(5,"Feedback of the students about the topics covered.",r.studentFeedback)}
+ ${row(6,"Remarks of the Vocational Teacher about the effectiveness and usefulness of the Field Visit",r.teacherRemarks)}
+ ${row("", "Topics covered or not, as per planed",r.planned)}
+ ${row("", "Depth of Information covered",r.depth)}
+ ${row("", "Overall Feedback about the industry visit",r.overall)}
+ ${row(7,"Attach the Pictures",r.pictures)}
+ ${row(9,"Attach Checklist for Field Visit Organized",r.checklist)}
+ ${row(10,"Overall Feedback of the Vocational teacher about the industry visit",r.vocOverall)}
+ <tr class="signrow"><td></td><td></td><td></td></tr>
+ <tr class="bottom"><td>Principal Sign &amp; Stamp</td><td></td><td>Vocational Trainer : ${esc(r.trainer)}</td></tr>
+ </table>`;
+ return d
+}
+function makePages(a){$("printPages").innerHTML="";a.forEach(r=>$("printPages").appendChild(make(r)))}
+function load(id){let r=get().find(x=>x.id===id);if(!r)return;currentId=id;Object.keys(r).forEach(k=>{if($(k))$(k).value=r[k]});makePages([r]);msg("Loaded "+id);window.scrollTo({top:0,behavior:"smooth"})}
+function render(){let a=get();$("list").innerHTML=a.length?a.map(r=>`<div class="item"><span><b>${esc(r.id)}</b> — ${esc(dtext(r.date))} — ${esc(r.org)}</span><span><button onclick="load('${r.id}')">EDIT / VIEW</button></span></div>`).join(""):"No saved reports."}
+function generateAll(){let a=get();if(!a.length){alert("No saved reports.");return}makePages(a);setTimeout(()=>window.print(),100)}
+function exportCSV(){let a=get();if(!a.length){alert("No records.");return}let keys=Object.keys(a[0]);let csv=[keys.join(","),...a.map(r=>keys.map(k=>`"${String(r[k]??"").replace(/"/g,'""')}"`).join(","))].join("\n");let b=new Blob([csv],{type:"text/csv"}),u=URL.createObjectURL(b),x=document.createElement("a");x.href=u;x.download="Industry_Visit_Reports.csv";x.click();URL.revokeObjectURL(u)}
+function deleteAll(){if(confirm("Delete all saved reports?")){localStorage.removeItem(KEY);currentId="";render();msg("All records deleted.")}}
+$("date").value=today();render();
+</script>
+</body>
+</html>

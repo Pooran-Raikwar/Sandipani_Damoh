@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guest Lecture Application Automation</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f4f6;color:#111;font-family:"Noto Sans Devanagari","Mangal",Arial,sans-serif}
+.controls{max-width:900px;margin:20px auto;padding:18px;background:#fff;border-radius:10px}
+label{display:block;font-weight:600;margin-bottom:6px}
+input{width:100%;padding:9px;border:1px solid #aaa;border-radius:5px;font-size:15px}
+.names{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+h3{font-size:16px;margin:14px 0 7px}
+button{padding:10px 18px;border:0;border-radius:6px;background:#1f4e79;color:white;font-size:15px;cursor:pointer;margin-top:14px}
+.clear{background:#666;margin-left:7px}
+.paper{width:794px;min-height:1123px;margin:18px auto;background:white;padding:60px 65px;font-size:16px;line-height:1.75}
+.left{text-align:left}
+.subject{font-weight:bold;margin-top:16px}
+p{margin:14px 0}
+ol{margin:8px 0 14px 28px;padding:0}
+.signature{text-align:right;margin-top:45px}
+@media(max-width:820px){
+ .paper{width:100%;min-height:auto;padding:30px 22px}
+ .names{grid-template-columns:1fr}
+}
+@media print{
+ body{background:#fff}
+ .controls{display:none}
+ .paper{width:210mm;height:297mm;min-height:297mm;margin:0;padding:22mm 22mm 18mm 22mm;font-size:15.5px;line-height:1.72}
+ @page{size:A4;margin:0}
+}
+</style>
+</head>
+<body>
+
+<div class="controls">
+<label>अतिथि व्याख्यान का माह</label>
+<input id="month" placeholder="जैसे — अक्टूबर 2026">
+
+<h3>IT-ITES ट्रेड : प्रस्तावित अतिथि व्याख्याताओं के नाम</h3>
+<div class="names">
+<input id="it1" placeholder="1. नाम">
+<input id="it2" placeholder="2. नाम">
+<input id="it3" placeholder="3. नाम">
+<input id="it4" placeholder="4. नाम">
+</div>
+
+<h3>Agriculture ट्रेड : प्रस्तावित अतिथि व्याख्याताओं के नाम</h3>
+<div class="names">
+<input id="ag1" placeholder="1. नाम">
+<input id="ag2" placeholder="2. नाम">
+<input id="ag3" placeholder="3. नाम">
+<input id="ag4" placeholder="4. नाम">
+</div>
+
+<button onclick="update();window.print()">🖨️ आवेदन प्रिंट करें</button>
+<button class="clear" onclick="clearForm()">साफ करें</button>
+</div>
+
+<div class="paper">
+<div class="left">
+<b>सेवा में,</b><br>
+<b>प्राचार्य महोदय,</b><br>
+<b>शासकीय संदीपनि उच्चतर माध्यमिक विद्यालय, दमोह (म.प्र.)</b>
+</div>
+
+<p class="subject">विषय : IT-ITES एवं Agriculture ट्रेड के अंतर्गत कक्षा 9वीं से 12वीं तक अतिथि व्याख्यान आयोजित किए जाने बाबत।</p>
+
+<p>महोदय,</p>
+
+<p>सविनय निवेदन है कि विद्यालय में संचालित <b>IT-ITES एवं Agriculture ट्रेड</b> के विद्यार्थियों को संबंधित क्षेत्र के विशेषज्ञों के व्यावहारिक ज्ञान एवं नवीन तकनीकों से परिचित कराने हेतु कक्षा <b>9वीं, 10वीं, 11वीं एवं 12वीं में प्रत्येक कक्षा के लिए 02-02 अतिथि व्याख्यान</b> माह <b id="showMonth">____________</b> में आयोजित किया जाना प्रस्तावित है।</p>
+
+<p>अतः विद्यार्थियों के कौशल विकास एवं व्यावसायिक मार्गदर्शन की दृष्टि से उक्त अतिथि व्याख्यान आयोजित करने की अनुमति प्रदान करने का कष्ट करें।</p>
+
+<p><b>प्रस्तावित अतिथि व्याख्याताओं के नाम :</b></p>
+
+<p><b>IT-ITES ट्रेड :</b></p>
+<ol id="showIT"></ol>
+
+<p><b>Agriculture ट्रेड :</b></p>
+<ol id="showAG"></ol>
+
+<p style="margin-top:35px">दिनांक : ____________</p>
+
+<div class="signature">
+<b>प्राचार्य की सील एवं हस्ताक्षर</b><br><br>
+____________________________
+</div>
+</div>
+
+<script>
+function update(){
+ document.getElementById("showMonth").textContent=document.getElementById("month").value.trim()||"____________";
+ ["IT","AG"].forEach(function(t){
+   var box=document.getElementById("show"+t); box.innerHTML="";
+   for(var i=1;i<=4;i++){
+     var li=document.createElement("li");
+     var id=(t==="IT"?"it":"ag")+i;
+     li.textContent=document.getElementById(id).value.trim()||"____________________________";
+     box.appendChild(li);
+   }
+ });
+}
+function clearForm(){
+ document.querySelectorAll("input").forEach(function(x){x.value=""});
+ update();
+}
+document.querySelectorAll("input").forEach(function(x){x.addEventListener("input",update)});
+update();
+</script>
+</body>
+</html>
