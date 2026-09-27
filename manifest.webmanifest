@@ -1,0 +1,17 @@
+{
+  "name": "Govt. Sandipani HSS School Damoh Digital Campus",
+  "short_name": "Sandipani Campus",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#07172e",
+  "theme_color": "#0b4fa3",
+  "description": "Digital campus with student services, vocational books, notes, results and administration.",
+  "icons": [
+    {
+      "src": "images/campus-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
