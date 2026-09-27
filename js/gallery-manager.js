@@ -1,10 +1,10 @@
 (function(){
-const API_URL=(typeof CONFIG!=='undefined'&&CONFIG.API_URL)||'';
+const API_URL=()=>localStorage.getItem('sandipani_api_url')||((typeof CONFIG!=='undefined'&&CONFIG.API_URL)||'');
 let PIN='';
 const $=id=>document.getElementById(id);
 
 async function call(action,data={}){
-  const r=await fetch(API_URL,{
+  const r=await fetch(API_URL(),{
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
     body:JSON.stringify({action,...data})
@@ -50,11 +50,10 @@ async function load(){
         const url=field(x,'Image URL','url');
 
         return `<div class="manager-card">
-          <img src="${esc(url)}" alt="${esc(title)}" loading="lazy">
+          <img src="${esc(url)}" alt="${esc(title)}" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('image-error')">
           <div class="body">
-            <b>${esc(title)}</b><br>
-            <small>${esc(section)}</small><br>
-            <button class="btn danger" data-id="${esc(id)}">Delete</button>
+            <b>${esc(title)}</b><br><small>${esc(section)}</small><br>
+            <div class="manager-actions"><button class="btn secondary" data-edit="${esc(id)}">Edit / Replace</button><button class="btn danger" data-id="${esc(id)}">Delete</button></div>
           </div>
         </div>`;
       }).join('')
@@ -62,20 +61,27 @@ async function load(){
 
   document.querySelectorAll('.manager-card [data-id]').forEach(b=>b.onclick=async()=>{
     if(!confirm('Delete this gallery photo?'))return;
-    try{
-      await call('galleryDelete',{pin:PIN,id:b.dataset.id});
-      await load();
-    }catch(e){
-      alert(e.message);
-    }
+    try{await call('galleryDelete',{pin:PIN,id:b.dataset.id});await load();}catch(e){alert(e.message);}
   });
+  document.querySelectorAll('.manager-card [data-edit]').forEach(b=>b.onclick=()=>editGallery(b.dataset.edit));
 }
 
+async function editGallery(id){
+  const title=prompt('New photo title (leave blank to keep current):');
+  const f=await chooseImage_();
+  if(title===null && !f)return;
+  const data={}; if(title!==null && title.trim())data.title=title.trim();
+  if(f){const prepared=await fileToBase64_(f);Object.assign(data,prepared);}
+  try{await call('galleryUpdate',{pin:PIN,id,data});await load();}catch(e){alert(e.message);}
+}
+function chooseImage_(){return new Promise(resolve=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>resolve(i.files[0]||null);i.click();});}
+function fileToBase64_(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve({base64:r.result,mimeType:f.type,fileName:f.name});r.onerror=reject;r.readAsDataURL(f);});}
 $('loginBtn').onclick=async()=>{
   try{
     const d=await call('verifyAdmin',{pin:$('pin').value.trim()});
     if(!d.valid)throw new Error('Invalid Admin PIN');
     PIN=$('pin').value.trim();
+    if(window.SiteMedia)window.SiteMedia.setPin(PIN);
     $('login').classList.add('hidden');
     $('panel').classList.remove('hidden');
     await load();

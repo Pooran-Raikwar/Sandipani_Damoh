@@ -1,8 +1,10 @@
 /* Sandipani API client: GitHub Pages -> Google Apps Script */
 const API = (() => {
-  const url = (typeof CONFIG !== 'undefined' && CONFIG.API_URL) ? CONFIG.API_URL : '';
+  const defaultUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_URL) ? CONFIG.API_URL : '';
+  const getUrl = () => localStorage.getItem('sandipani_api_url') || defaultUrl;
 
   async function call(action, data = {}) {
+    const url=getUrl();
     if (!url) throw new Error('Google Apps Script URL is not configured.');
     const res = await fetch(url, {
       method: 'POST',
@@ -62,6 +64,13 @@ const API = (() => {
     },
 
     deleteGallery:(pin,id)=>call('galleryDelete',{pin,id}),
+    updateGallery:(pin,id,data)=>call('galleryUpdate',{pin,id,data}),
+    getConnectionInfo:pin=>call('connectionInfo',{pin}),
+    connectSheet:(pin,sheetRef)=>call('connectSheet',{pin,sheetRef}),
+    initializeSystem:()=>call('initializeSystem'),
+    getSiteMedia:()=>call('siteMediaList'),
+    saveSiteMedia:(pin,data)=>call('siteMediaSave',{pin,data}),
+    deleteSiteMedia:(pin,key)=>call('siteMediaDelete',{pin,key}),
 
     // Books & Notes
     getBooks:(filters)=>call('booksList',{filters}),

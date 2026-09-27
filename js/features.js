@@ -21,3 +21,21 @@
  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSearch(); if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openSearch()}});
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',inject);else inject();
 })();
+
+// Premium UX: global loading/search feedback and broken-image recovery.
+(()=>{
+ function ensureLoader(){
+  if(document.getElementById('globalWait'))return;
+  const d=document.createElement('div');d.id='globalWait';d.className='global-wait';d.innerHTML='<div class="wait-card"><div class="wait-spinner"></div><b>Loading campus...</b><span>Please wait</span></div>';document.body.appendChild(d);
+ }
+ function show(){ensureLoader();document.getElementById('globalWait').classList.add('show');}
+ function hide(){document.getElementById('globalWait')?.classList.remove('show');}
+ const nativeFetch=window.fetch;
+ window.fetch=async function(...args){show();try{return await nativeFetch.apply(this,args)}finally{hide()}};
+ document.addEventListener('DOMContentLoaded',()=>{
+   document.querySelectorAll('img').forEach(img=>{if(!img.dataset.localFallback)img.dataset.localFallback=img.getAttribute('src')||'';img.addEventListener('error',()=>{if(img.dataset.localFallback && img.src!==new URL(img.dataset.localFallback,document.baseURI).href){img.src=img.dataset.localFallback;}});});
+   document.querySelectorAll('form').forEach(form=>form.addEventListener('submit',()=>show()));
+   document.querySelectorAll('a[href]').forEach(a=>{const href=a.getAttribute('href')||'';if(!href||href.startsWith('#')||href.startsWith('http')||href.startsWith('mailto:')||href.startsWith('javascript:'))return;a.addEventListener('click',()=>{show();setTimeout(hide,7000)});});
+   setTimeout(hide,5000);
+ });
+})();

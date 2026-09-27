@@ -1,5 +1,5 @@
 (function(){
-const API_URL=(typeof CONFIG!=='undefined'&&CONFIG.API_URL)||'';
+const API_URL=()=>localStorage.getItem('sandipani_api_url')||((typeof CONFIG!=='undefined'&&CONFIG.API_URL)||'');
 
 const local=[
  {category:'guest',title:'Guest Lecture • 01',url:'images/guest-lecture-01.jpg'},
@@ -28,7 +28,7 @@ const sectionToCategory={
 };
 
 async function call(action,data={}){
- const r=await fetch(API_URL,{
+ const r=await fetch(API_URL(),{
    method:'POST',
    headers:{'Content-Type':'text/plain;charset=utf-8'},
    body:JSON.stringify({action,...data})
@@ -95,7 +95,7 @@ function render(items){
      </div>
      <div class="photo-grid">
        ${rows.map(x=>`<figure class="photo-card" data-category="${cat}">
-         <img src="${esc(x.url)}" alt="${esc(x.title)}" loading="lazy">
+         <img src="${esc(x.url)}" alt="${esc(x.title)}" loading="eager" onerror="this.closest('.photo-card')?.classList.add('image-missing')">
          <figcaption>${esc(x.title)}</figcaption>
        </figure>`).join('')}
      </div>
