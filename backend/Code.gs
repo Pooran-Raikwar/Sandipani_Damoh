@@ -6,8 +6,8 @@
  * Set Script Property ADMIN_PIN for production (default is 2580).
  */
 const PROP = PropertiesService.getScriptProperties();
-const DEFAULT_PIN = '2580';
-const SHEETS = { students:'Students', marks:'Marks', settings:'FormSettings', config:'AppConfig', deleted:'Deleted Records', audit:'Audit Log', gallery:'Gallery', books:'Books', notes:'Notes', notices:'Notices', guestLectures:'Guest Lectures', applications:'Applications', staff:'Staff', documents:'Documents' };
+const DEFAULT_PIN = '87654300';
+const SHEETS = { students:'Students', marks:'Marks', settings:'FormSettings', config:'AppConfig', deleted:'Deleted Records', audit:'Audit Log', gallery:'Gallery', books:'Books', notes:'Notes', notices:'Notices', guestLectures:'Guest Lectures', applications:'Applications', staff:'Staff', documents:'Documents', siteMedia:'Site Media' };
 const STUDENT_HEADERS = [
   'Timestamp','Academic Year','Class','Section','Roll Number','Student Name',"Father's Name",'Medium','Gender','Mobile Number','Samagra ID',
   'Trade','Job Role','Stream','IT Subject Opted in Place of This Language','Additional Subject','Status'
@@ -48,6 +48,11 @@ const GUEST_HEADERS=['ID','Created At','Month','Topic','Speaker','Date','Status'
 const APPLICATION_HEADERS=['ID','Created At','Type','Applicant','Class','Mobile','Status','Data JSON'];
 const STAFF_HEADERS=['ID','Created At','Name','Role','Department','Mobile','Email','Status'];
 const DOCUMENT_HEADERS=['ID','Uploaded At','Type','Title','Class','Medium','File Name','File ID','Download URL'];
+const SITE_MEDIA_HEADERS=['Key','Title','Description','File Name','File ID','Image URL','Updated At'];
+const SITE_MEDIA_KEYS=[
+  ['school-logo','School Logo','Header/footer school logo'],
+  ['teacher-profile','Teacher Profile','About page profile image']
+];
 
 function prop_(k){return PROP.getProperty(k)||'';}
 function setProp_(k,v){PROP.setProperty(k,String(v));}
@@ -81,6 +86,7 @@ function setup_(){
   ensureSheet_(SHEETS.applications,APPLICATION_HEADERS);
   ensureSheet_(SHEETS.staff,STAFF_HEADERS);
   ensureSheet_(SHEETS.documents,DOCUMENT_HEADERS);
+  ensureSheet_(SHEETS.siteMedia,SITE_MEDIA_HEADERS);
 
   const fs=sheet_(SHEETS.settings);
   const last=fs.getLastRow();
@@ -101,6 +107,30 @@ function setup_(){
   return ss_();
 }
 
+function RUN_FIRST_initializeSystem(){ return initializeSystem(); }
+function initializeSystem(){
+  if(prop_('ADMIN_PIN')==='2580')setProp_('ADMIN_PIN',DEFAULT_PIN);
+  const ss=setup_();
+  return {status:'ready',sheetId:ss.getId(),sheetUrl:ss.getUrl(),schoolName:prop_('SCHOOL_NAME')||'Govt. Sandipani HSS School Damoh'};
+}
+function extractSheetId_(ref){
+  ref=norm_(ref);
+  if(!ref) throw new Error('Google Sheet URL or ID is required.');
+  const m=ref.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  return m?m[1]:ref.replace(/[^a-zA-Z0-9-_]/g,'');
+}
+function connectSheet_(pin,ref){
+  if(!verify_(pin))throw new Error('Invalid Admin PIN');
+  const id=extractSheetId_(ref);
+  let ss; try{ss=SpreadsheetApp.openById(id);}catch(e){throw new Error('Google Sheet open नहीं हो सकी. URL/ID और access check करें.');}
+  setProp_('SHEET_ID',ss.getId()); setup_(); audit_('CONNECT_SHEET',ss.getUrl());
+  return {sheetId:ss.getId(),sheetUrl:ss.getUrl(),status:'connected'};
+}
+function connectionInfo_(pin){
+  if(!verify_(pin))throw new Error('Invalid Admin PIN');
+  const ss=ss_();
+  return {sheetId:ss.getId(),sheetUrl:ss.getUrl(),apiUrl:prop_('PUBLIC_API_URL')||'',adminPinConfigured:!!prop_('ADMIN_PIN')};
+}
 function adminPin_(){return prop_('ADMIN_PIN')||DEFAULT_PIN;}
 function verify_(pin){return norm_(pin)===adminPin_();}
 function audit_(action,details){sheet_(SHEETS.audit).appendRow([new Date(),action,'Admin',details||'']);}
@@ -278,6 +308,53 @@ function galleryUpload_(pin,data){
   };
 };
 
+function galleryUpdate_(pin,id,data){
+  if(!verify_(pin))throw new Error('Invalid Admin PIN');
+  setup_(); data=data||{}; id=norm_(id); if(!id)throw new Error('Gallery ID is required.');
+  const sh=sheet_(SHEETS.gallery),h=headers_(sh),rows=values_(sh),ii=h.indexOf('ID'),fi=h.indexOf('File ID'),si=h.indexOf('Section'),ti=h.indexOf('Title'),fni=h.indexOf('File Name'),ui=h.indexOf('Image URL');
+  const idx=rows.findIndex(r=>norm_(r[ii])===id); if(idx<0)throw new Error('Gallery image not found.');
+  const row=idx+2, old=rows[idx];
+  const title=norm_(data.title)||norm_(old[ti]);
+  let section=norm_(data.section)||norm_(old[si]);
+  const map={'guest':'Guest Lectures Photos','industrial':'Industrial Visit Photos','classroom':'Class Room Teaching','activities':'Student Activities'};
+  section=map[section]||section;
+  if(GALLERY_SECTIONS.indexOf(section)<0)throw new Error('Invalid gallery section.');
+  let fileId=norm_(old[fi]), fileName=norm_(old[fni]), url=norm_(old[ui]);
+  const b64=String(data.base64||'').replace(/^data:[^;]+;base64,/,'').trim();
+  if(b64){
+    const mime=norm_(data.mimeType)||'image/jpeg'; if(!/^image\//i.test(mime))throw new Error('Only image files are allowed.');
+    const bytes=Utilities.base64Decode(b64); if(bytes.length>8*1024*1024)throw new Error('Image is too large. Maximum 8 MB.');
+    const blob=Utilities.newBlob(bytes,mime,norm_(data.fileName)||('gallery-'+Date.now()+'.jpg'));
+    const newFile=galleryFolder_(section).createFile(blob); try{newFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW);}catch(e){}
+    if(fileId){try{DriveApp.getFileById(fileId).setTrashed(true);}catch(e){}}
+    fileId=newFile.getId(); fileName=newFile.getName(); url='https://drive.google.com/thumbnail?id='+fileId+'&sz=w1600';
+  }
+  sh.getRange(row,1,1,h.length).setValues([h.map(k=>k==='ID'?id:k==='Uploaded At'?old[h.indexOf(k)]:k==='Section'?section:k==='Title'?title:k==='File Name'?fileName:k==='File ID'?fileId:k==='Image URL'?url:old[h.indexOf(k)])]);
+  audit_('GALLERY_UPDATE',id); return {id,section,title,fileName,fileId,url};
+}
+
+function siteMediaList_(){
+  setup_();
+  const sh=sheet_(SHEETS.siteMedia),h=headers_(sh),rows=values_(sh).map(r=>obj_(h,r));
+  const by={}; rows.forEach(x=>by[norm_(x.Key)]=x);
+  return SITE_MEDIA_KEYS.map(m=>by[m[0]]||{Key:m[0],Title:m[1],Description:m[2],'File Name':'','File ID':'','Image URL':'','Updated At':''});
+}
+function siteMediaSave_(pin,data){
+  if(!verify_(pin))throw new Error('Invalid Admin PIN'); setup_(); data=data||{};
+  const key=norm_(data.key); if(!key)throw new Error('Image key is required.');
+  const allowed=SITE_MEDIA_KEYS.map(x=>x[0]); if(allowed.indexOf(key)<0)throw new Error('Invalid site image key.');
+  const sh=sheet_(SHEETS.siteMedia),h=headers_(sh),rows=values_(sh),ki=h.indexOf('Key'); let idx=rows.findIndex(r=>norm_(r[ki])===key);
+  let old=idx>=0?rows[idx]:[]; let fileId=idx>=0?norm_(old[h.indexOf('File ID')]):'', fileName=idx>=0?norm_(old[h.indexOf('File Name')]):'', url=idx>=0?norm_(old[h.indexOf('Image URL')]):'';
+  const b64=String(data.base64||'').replace(/^data:[^;]+;base64,/,'').trim();
+  if(b64){const mime=norm_(data.mimeType)||'image/jpeg';if(!/^image\//i.test(mime))throw new Error('Only image files are allowed.');const bytes=Utilities.base64Decode(b64);if(bytes.length>8*1024*1024)throw new Error('Image is too large. Maximum 8 MB.');const folder=galleryRoot_();const it=folder.getFoldersByName('Site Images');const f=it.hasNext()?it.next():folder.createFolder('Site Images');const file=f.createFile(Utilities.newBlob(bytes,mime,norm_(data.fileName)||key+'.jpg'));try{file.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW);}catch(e){}if(fileId){try{DriveApp.getFileById(fileId).setTrashed(true);}catch(e){} }fileId=file.getId();fileName=file.getName();url='https://drive.google.com/thumbnail?id='+fileId+'&sz=w1200';}
+  const meta=SITE_MEDIA_KEYS.find(x=>x[0]===key); const vals=[key,meta[1],meta[2],fileName,fileId,url,new Date()];
+  if(idx>=0)sh.getRange(idx+2,1,1,vals.length).setValues([vals]); else sh.appendRow(vals);
+  audit_('SITE_MEDIA_UPDATE',key); return {key,url,fileId,fileName};
+}
+function siteMediaDelete_(pin,key){
+  if(!verify_(pin))throw new Error('Invalid Admin PIN'); setup_(); key=norm_(key); const sh=sheet_(SHEETS.siteMedia),h=headers_(sh),rows=values_(sh),ki=h.indexOf('Key'),fi=h.indexOf('File ID'),idx=rows.findIndex(r=>norm_(r[ki])===key); if(idx<0)return true; const fid=norm_(rows[idx][fi]);if(fid){try{DriveApp.getFileById(fid).setTrashed(true);}catch(e){}}sh.deleteRow(idx+2);audit_('SITE_MEDIA_DELETE',key);return true;
+}
+
 function galleryDelete_(pin,id){
   if(!verify_(pin))throw new Error('Invalid Admin PIN');
   setup_(); id=norm_(id); if(!id)throw new Error('Gallery ID is required.');
@@ -415,6 +492,9 @@ function aiStatus_(pin){
 function route_(action,d){
   switch(action){
     case 'setup': setup_(); return {status:'ready',sheetId:ss_().getId(),sheetUrl:ss_().getUrl(),adminPinSet:!!prop_('ADMIN_PIN'),schoolName:prop_('SCHOOL_NAME')||'Govt. Sandipani HSS School Damoh'};
+    case 'initializeSystem': return initializeSystem();
+    case 'connectionInfo': return connectionInfo_(d.pin);
+    case 'connectSheet': return connectSheet_(d.pin,d.sheetRef||d.sheetUrl||d.sheetId);
     case 'settings': return settings_();
     case 'config': return config_();
     case 'verifyAdmin': return {valid:verify_(d.pin)};
@@ -432,6 +512,7 @@ function route_(action,d){
     case 'result': return getResult(d.roll,d.medium,d.class||d.Class);
     case 'galleryList': return galleryList_();
     case 'galleryUpload': return galleryUpload_(d.pin,d.data||{});
+    case 'galleryUpdate': return galleryUpdate_(d.pin,d.id,d.data||{});
     case 'galleryDelete': return galleryDelete_(d.pin,d.id||d.galleryId);
     case 'booksList': return booksList_(d.filters||{});
     case 'notesList': return notesList_(d.filters||{});
@@ -448,6 +529,9 @@ function route_(action,d){
     case 'staffSave': return staffSave_(d.pin,d.data||{});
     case 'staffDelete': return staffDelete_(d.pin,d.id);
     case 'documentsList': return documentsList_(d.pin);
+    case 'siteMediaList': return siteMediaList_();
+    case 'siteMediaSave': return siteMediaSave_(d.pin,d.data||{});
+    case 'siteMediaDelete': return siteMediaDelete_(d.pin,d.key);
     case 'documentUpload': return documentUpload_(d.pin,d.data||{});
     case 'aiChat': return aiChat_(d.data||d);
     case 'aiStatus': return aiStatus_(d.pin);
