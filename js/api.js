@@ -1,10 +1,8 @@
 /* Sandipani API client: GitHub Pages -> Google Apps Script */
 const API = (() => {
-  const defaultUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_URL) ? CONFIG.API_URL : '';
-  const getUrl = () => localStorage.getItem('sandipani_api_url') || defaultUrl;
+ const url = (typeof CONFIG !== 'undefined' && CONFIG.API_URL) ? CONFIG.API_URL : '';
 
-  async function call(action, data = {}) {
-    const url=getUrl();
+async function call(action, data = {}) {
     if (!url) throw new Error('Google Apps Script URL is not configured.');
     const res = await fetch(url, {
       method: 'POST',
