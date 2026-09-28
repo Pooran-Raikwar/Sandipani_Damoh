@@ -1,14 +1,518 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="css/style.css"><link rel="manifest" href="manifest.webmanifest"><title>Advanced Admin Command Center | Sandipani</title><meta name="description" content="Resources, notices, guest lectures, staff, applications and documents management."><meta name="robots" content="noindex, nofollow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"><link rel="canonical" href="https://pooran-raikwar.github.io/Sandipani-damoh/admin-advanced.html"><meta property="og:type" content="website"><meta property="og:title" content="Advanced Admin Command Center | Sandipani"><meta property="og:description" content="Resources, notices, guest lectures, staff, applications and documents management."><meta property="og:url" content="https://pooran-raikwar.github.io/Sandipani-damoh/admin-advanced.html"><meta property="og:site_name" content="Govt. Sandipani HSS School Damoh"><meta name="twitter:card" content="summary"></head><body><header class="top"><div class="top-inner"><img class="logo" src="images/campus-mark.svg" data-site-image="school-logo"><div><div class="school-name">Sandipani Advanced Command Center</div><div class="school-sub">Resources • Notices • Guest Lectures • Staff • Applications • Documents</div></div><nav class="nav"><a href="admin.html">Main Admin</a><a href="resources.html">Student Library</a><a href="index.html">Home</a></nav></div></header><main class="main"><div class="container"><div id="login" class="card"><span class="badge">ADMIN ONLY</span><h1>Command Center Login</h1><div class="grid"><div class="field"><label>Admin PIN</label><input id="pin" type="password" inputmode="numeric"></div></div><button class="btn primary" onclick="login()">Login</button><div id="msg" class="message"></div></div><div id="panel" class="hidden"><div class="stats"><div class="stat"><small>Students</small><b id="students">—</b></div><div class="stat"><small>Books</small><b id="books">0</b></div><div class="stat"><small>Notes</small><b id="notes">0</b></div><div class="stat"><small>Notices</small><b id="notices">0</b></div></div><div class="tabs"><button class="tab active" onclick="tab('resources')">📚 Books & Notes</button><button class="tab" onclick="tab('notice')">🔔 Notices</button><button class="tab" onclick="tab('lecture')">🎤 Guest Lectures</button><button class="tab" onclick="tab('staff')">👨‍🏫 Staff</button><button class="tab" onclick="tab('apps')">📨 Applications</button><button class="tab" onclick="tab('docs')">📄 Documents</button><button class="tab" onclick="tab('certificate')">🏅 Certificate</button></div>
-<section id="resources" class="admin-section"><div class="card"><h2>Upload Books / Notes</h2><p class="muted">9th–12th • Hindi / English • PDF or supported document. Maximum 20 MB.</p><div class="grid"><div class="field"><label>Category</label><select id="rCategory"><option>Books</option><option>Notes</option></select></div><div class="field"><label>Class</label><select id="rClass"><option>9th</option><option>10th</option><option>11th</option><option>12th</option></select></div><div class="field"><label>Medium</label><select id="rMedium"><option>Hindi</option><option>English</option></select></div><div class="field"><label>Book / Note Name</label><input id="rName" placeholder="e.g. Information Technology Class 9"></div><div class="field"><label>Trade</label><input id="rTrade" value="Vocational"></div><div class="field"><label>File</label><input id="rFile" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx"></div><div class="field"><label>Description</label><textarea id="rDesc" placeholder="Short description"></textarea></div></div><button class="btn primary" onclick="uploadResource()">Upload Resource</button><div id="resourceMsg" class="message"></div></div><div class="card"><h3>Existing Resources</h3><div id="resourceList" class="table-wrap"></div></div></section>
-<section id="notice" class="admin-section hidden"><div class="card"><h2>Notice & Notification System</h2><div class="grid"><div class="field"><label>Title</label><input id="nTitle"></div><div class="field"><label>Priority</label><select id="nPriority"><option>Normal</option><option>Important</option><option>Urgent</option></select></div></div><div class="field"><label>Message</label><textarea id="nMessage"></textarea></div><button class="btn primary" onclick="saveNotice()">Publish Notice</button><div id="noticeList" class="table-wrap" style="margin-top:15px"></div></div></section>
-<section id="lecture" class="admin-section hidden"><div class="card"><h2>Guest Lecture Management</h2><div class="grid"><div class="field"><label>Month</label><input id="gMonth" placeholder="Month"></div><div class="field"><label>Topic</label><input id="gTopic"></div><div class="field"><label>Speaker</label><input id="gSpeaker"></div><div class="field"><label>Date</label><input id="gDate" type="date"></div><div class="field"><label>Status</label><select id="gStatus"><option>Planned</option><option>Completed</option><option>Cancelled</option></select></div></div><button class="btn primary" onclick="saveLecture()">Save Guest Lecture</button><div id="lectureList" class="table-wrap" style="margin-top:15px"></div></div></section>
-<section id="staff" class="admin-section hidden"><div class="card"><h2>Teacher / Staff Records</h2><div class="grid"><input id="sName" placeholder="Name"><input id="sRole" placeholder="Role"><input id="sDept" placeholder="Department"><input id="sMobile" placeholder="Mobile"><input id="sEmail" placeholder="Email"></div><button class="btn primary" onclick="saveStaff()">Save Staff</button><div id="staffList" class="table-wrap" style="margin-top:15px"></div></div></section>
-<section id="apps" class="admin-section hidden"><div class="card"><h2>Application Management</h2><p class="muted">Existing application records are shown here when your Apps Script application flow writes to the Applications sheet.</p><div id="appsList" class="table-wrap"></div></div></section>
-<section id="docs" class="admin-section hidden"><div class="card"><h2>Document Management</h2><div class="grid"><input id="dType" placeholder="Document Type"><input id="dTitle" placeholder="Document Title"><input id="dClass" placeholder="Class"><select id="dMedium"><option value="">Medium</option><option>Hindi</option><option>English</option></select><input id="dFile" type="file"></div><button class="btn primary" onclick="uploadDoc()">Upload Document</button><div id="docsList" class="table-wrap" style="margin-top:15px"></div></div></section>
-<section id="certificate" class="admin-section hidden"><div class="card"><h2>Certificate / Document Generator</h2><p class="muted">Generate a clean printable certificate from entered details. This is a template and should be adapted to the school's officially approved format before official use.</p><div class="grid"><input id="cName" placeholder="Student Name"><input id="cClass" placeholder="Class"><input id="cTitle" value="Certificate of Participation" placeholder="Certificate Title"><input id="cDate" type="date"><input id="cTopic" placeholder="Programme / Topic"></div><button class="btn primary" onclick="printCertificate()">Generate & Print</button></div></section></div></div></main><script src="js/config.js"></script><script src="js/api.js"></script><script>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="manifest" href="manifest.webmanifest">
+
+<title>Advanced Admin Command Center | Sandipani</title>
+
+<meta name="description" content="Resources, notices, guest lectures, staff, applications and documents management.">
+<meta name="robots" content="noindex, nofollow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+
+<link rel="canonical" href="https://pooran-raikwar.github.io/Sandipani-damoh/admin-advanced.html">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Advanced Admin Command Center | Sandipani">
+<meta property="og:description" content="Resources, notices, guest lectures, staff, applications and documents management.">
+<meta property="og:url" content="https://pooran-raikwar.github.io/Sandipani-damoh/admin-advanced.html">
+<meta property="og:site_name" content="Govt. Sandipani HSS School Damoh">
+
+<meta name="twitter:card" content="summary">
+</head>
+
+<body>
+
+<header class="top">
+  <div class="top-inner">
+
+    <img
+      class="logo"
+      src="images/campus-mark.svg"
+      data-site-image="school-logo"
+      alt="School Logo"
+    >
+
+    <div>
+      <div class="school-name">Sandipani Advanced Command Center</div>
+      <div class="school-sub">
+        Resources • Notices • Guest Lectures • Staff • Applications • Documents
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="admin.html">Main Admin</a>
+      <a href="resources.html">Student Library</a>
+      <a href="index.html">Home</a>
+    </nav>
+
+  </div>
+</header>
+
+<main class="main">
+<div class="container">
+
+<!-- LOGIN -->
+<div id="login" class="card">
+
+  <span class="badge">ADMIN ONLY</span>
+
+  <h1>Command Center Login</h1>
+
+  <div class="grid">
+    <div class="field">
+      <label>Admin PIN</label>
+      <input
+        id="pin"
+        type="password"
+        inputmode="numeric"
+        autocomplete="off"
+      >
+    </div>
+  </div>
+
+  <button class="btn primary" onclick="login()">Login</button>
+
+  <div id="msg" class="message"></div>
+
+</div>
+
+
+<!-- ADMIN PANEL -->
+<div id="panel" class="hidden">
+
+  <!-- STATS -->
+  <div class="stats">
+
+    <div class="stat">
+      <small>Students</small>
+      <b id="students">—</b>
+    </div>
+
+    <div class="stat">
+      <small>Books</small>
+      <b id="books">0</b>
+    </div>
+
+    <div class="stat">
+      <small>Notes</small>
+      <b id="notes">0</b>
+    </div>
+
+    <div class="stat">
+      <small>Notices</small>
+      <b id="notices">0</b>
+    </div>
+
+  </div>
+
+
+  <!-- TABS -->
+  <div class="tabs">
+
+    <button class="tab active" onclick="tab('resources')">
+      📚 Books & Notes
+    </button>
+
+    <button class="tab" onclick="tab('notice')">
+      🔔 Notices
+    </button>
+
+    <button class="tab" onclick="tab('lecture')">
+      🎤 Guest Lectures
+    </button>
+
+    <button class="tab" onclick="tab('staff')">
+      👨‍🏫 Staff
+    </button>
+
+    <button class="tab" onclick="tab('apps')">
+      📨 Applications
+    </button>
+
+    <button class="tab" onclick="tab('docs')">
+      📄 Documents
+    </button>
+
+    <button class="tab" onclick="tab('certificate')">
+      🏅 Certificate
+    </button>
+
+  </div>
+
+
+  <!-- BOOKS / NOTES -->
+  <section id="resources" class="admin-section">
+
+    <div class="card">
+
+      <h2>Upload Books / Notes</h2>
+
+      <p class="muted">
+        9th–12th • Hindi / English • PDF or supported document.
+        Maximum 20 MB.
+      </p>
+
+      <div class="grid">
+
+        <div class="field">
+          <label>Category</label>
+          <select id="rCategory">
+            <option>Books</option>
+            <option>Notes</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Class</label>
+          <select id="rClass">
+            <option>9th</option>
+            <option>10th</option>
+            <option>11th</option>
+            <option>12th</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Medium</label>
+          <select id="rMedium">
+            <option>Hindi</option>
+            <option>English</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Book / Note Name</label>
+          <input
+            id="rName"
+            placeholder="e.g. Information Technology Class 9"
+          >
+        </div>
+
+        <div class="field">
+          <label>Trade</label>
+          <input id="rTrade" value="Vocational">
+        </div>
+
+        <div class="field">
+          <label>File</label>
+          <input
+            id="rFile"
+            type="file"
+            accept=".pdf,.doc,.docx,.ppt,.pptx"
+          >
+        </div>
+
+        <div class="field">
+          <label>Description</label>
+          <textarea
+            id="rDesc"
+            placeholder="Short description"
+          ></textarea>
+        </div>
+
+      </div>
+
+      <button class="btn primary" onclick="uploadResource()">
+        Upload Resource
+      </button>
+
+      <div id="resourceMsg" class="message"></div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>Existing Resources</h3>
+
+      <div id="resourceList" class="table-wrap">
+        Loading resources...
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- NOTICE -->
+  <section id="notice" class="admin-section hidden">
+
+    <div class="card">
+
+      <h2>Notice & Notification System</h2>
+
+      <div class="grid">
+
+        <div class="field">
+          <label>Title</label>
+          <input id="nTitle">
+        </div>
+
+        <div class="field">
+          <label>Priority</label>
+          <select id="nPriority">
+            <option>Normal</option>
+            <option>Important</option>
+            <option>Urgent</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div class="field">
+        <label>Message</label>
+        <textarea id="nMessage"></textarea>
+      </div>
+
+      <button class="btn primary" onclick="saveNotice()">
+        Publish Notice
+      </button>
+
+      <div
+        id="noticeList"
+        class="table-wrap"
+        style="margin-top:15px"
+      ></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- GUEST LECTURES -->
+  <section id="lecture" class="admin-section hidden">
+
+    <div class="card">
+
+      <h2>Guest Lecture Management</h2>
+
+      <div class="grid">
+
+        <div class="field">
+          <label>Month</label>
+          <input id="gMonth" placeholder="Month">
+        </div>
+
+        <div class="field">
+          <label>Topic</label>
+          <input id="gTopic">
+        </div>
+
+        <div class="field">
+          <label>Speaker</label>
+          <input id="gSpeaker">
+        </div>
+
+        <div class="field">
+          <label>Date</label>
+          <input id="gDate" type="date">
+        </div>
+
+        <div class="field">
+          <label>Status</label>
+          <select id="gStatus">
+            <option>Planned</option>
+            <option>Completed</option>
+            <option>Cancelled</option>
+          </select>
+        </div>
+
+      </div>
+
+      <button class="btn primary" onclick="saveLecture()">
+        Save Guest Lecture
+      </button>
+
+      <div
+        id="lectureList"
+        class="table-wrap"
+        style="margin-top:15px"
+      ></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- STAFF -->
+  <section id="staff" class="admin-section hidden">
+
+    <div class="card">
+
+      <h2>Teacher / Staff Records</h2>
+
+      <div class="grid">
+
+        <input id="sName" placeholder="Name">
+        <input id="sRole" placeholder="Role">
+        <input id="sDept" placeholder="Department">
+        <input id="sMobile" placeholder="Mobile">
+        <input id="sEmail" placeholder="Email">
+
+      </div>
+
+      <button class="btn primary" onclick="saveStaff()">
+        Save Staff
+      </button>
+
+      <div
+        id="staffList"
+        class="table-wrap"
+        style="margin-top:15px"
+      ></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- APPLICATIONS -->
+  <section id="apps" class="admin-section hidden">
+
+    <div class="card">
+
+      <h2>Application Management</h2>
+
+      <p class="muted">
+        Existing application records are shown here when your Apps Script
+        application flow writes to the Applications sheet.
+      </p>
+
+      <div id="appsList" class="table-wrap">
+        Loading applications...
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- DOCUMENTS -->
+  <section id="docs" class="admin-section hidden">
+
+    <div class="card">
+
+      <h2>Document Management</h2>
+
+      <div class="grid">
+
+        <input
+          id="dType"
+          placeholder="Document Type"
+        >
+
+        <input
+          id="dTitle"
+          placeholder="Document Title"
+        >
+
+        <input
+          id="dClass"
+          placeholder="Class"
+        >
+
+        <select id="dMedium">
+          <option value="">Medium</option>
+          <option>Hindi</option>
+          <option>English</option>
+        </select>
+
+        <input
+          id="dFile"
+          type="file"
+        >
+
+      </div>
+
+      <button class="btn primary" onclick="uploadDoc()">
+        Upload Document
+      </button>
+
+      <div
+        id="docsList"
+        class="table-wrap"
+        style="margin-top:15px"
+      ></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- CERTIFICATE -->
+  <section id="certificate" class="admin-section hidden">
+
+    <div class="card">
+
+      <h2>Certificate / Document Generator</h2>
+
+      <p class="muted">
+        Generate a clean printable certificate from entered details.
+        This is a template and should be adapted to the school's officially
+        approved format before official use.
+      </p>
+
+      <div class="grid">
+
+        <input
+          id="cName"
+          placeholder="Student Name"
+        >
+
+        <input
+          id="cClass"
+          placeholder="Class"
+        >
+
+        <input
+          id="cTitle"
+          value="Certificate of Participation"
+          placeholder="Certificate Title"
+        >
+
+        <input
+          id="cDate"
+          type="date"
+        >
+
+        <input
+          id="cTopic"
+          placeholder="Programme / Topic"
+        >
+
+      </div>
+
+      <button class="btn primary" onclick="printCertificate()">
+        Generate & Print
+      </button>
+
+    </div>
+
+  </section>
+
+</div>
+
+</div>
+</main>
+
+
+<!-- JAVASCRIPT -->
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+
+<script>
+
 let pin = '';
 
 const $ = id => document.getElementById(id);
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
 
 function esc(v){
   return String(v ?? '').replace(/[&<>"']/g,m=>({
@@ -20,7 +524,13 @@ function esc(v){
   }[m]));
 }
 
+
+/* =========================
+   LOGIN
+========================= */
+
 async function login(){
+
   const enteredPin = $('pin').value.trim();
 
   if(!enteredPin){
@@ -31,80 +541,169 @@ async function login(){
   $('msg').textContent = 'Verifying PIN...';
 
   try{
+
     const result = await API.verifyAdmin(enteredPin);
 
-    console.log('Command Center login response:', result);
+    console.log(
+      'Command Center login response:',
+      result
+    );
 
     if(!result || result.valid !== true){
+
       $('msg').textContent = 'Invalid Admin PIN.';
       return;
+
     }
 
     pin = enteredPin;
 
     $('login').classList.add('hidden');
     $('panel').classList.remove('hidden');
+
     $('msg').textContent = '';
 
     await loadAll();
 
   }catch(e){
-    console.error('Command Center Login Error:',e);
+
+    console.error(
+      'Command Center Login Error:',
+      e
+    );
+
     $('msg').textContent =
-      'Login failed: ' + (e && e.message ? e.message : 'Unable to connect to server.');
+      'Login failed: ' +
+      (e && e.message
+        ? e.message
+        : 'Unable to connect to server.');
+
   }
+
 }
+
+
+/* =========================
+   TAB SYSTEM
+========================= */
 
 function tab(id){
-  document.querySelectorAll('.admin-section')
+
+  document
+    .querySelectorAll('.admin-section')
     .forEach(x=>x.classList.add('hidden'));
 
-  $(id).classList.remove('hidden');
+  const section = $(id);
 
-  if(id==='resources') loadResources();
-  if(id==='notice') loadNotices();
-  if(id==='lecture') loadLectures();
-  if(id==='staff') loadStaff();
-  if(id==='apps') loadApps();
-  if(id==='docs') loadDocs();
+  if(section){
+    section.classList.remove('hidden');
+  }
+
+  if(id === 'resources'){
+    loadResources();
+  }
+
+  if(id === 'notice'){
+    loadNotices();
+  }
+
+  if(id === 'lecture'){
+    loadLectures();
+  }
+
+  if(id === 'staff'){
+    loadStaff();
+  }
+
+  if(id === 'apps'){
+    loadApps();
+  }
+
+  if(id === 'docs'){
+    loadDocs();
+  }
+
 }
 
+
+/* =========================
+   LOAD ALL
+========================= */
+
 async function loadAll(){
+
   try{
+
     const s = await API.getStats(pin,{});
-    $('students').textContent = s.total || s.students || 0;
+
+    $('students').textContent =
+      s.total ||
+      s.students ||
+      0;
+
   }catch(e){
-    console.error(e);
+
+    console.error(
+      'Stats Error:',
+      e
+    );
+
   }
 
   await loadResources();
   await loadNotices();
+
 }
+
+
+/* =========================
+   FILE DATA
+========================= */
 
 async function fileData(file){
+
   return new Promise((res,rej)=>{
+
     const r = new FileReader();
 
-    r.onload = () => res({
-      base64:r.result,
-      mimeType:file.type,
-      fileName:file.name
-    });
+    r.onload = () => {
+
+      res({
+        base64:r.result,
+        mimeType:file.type,
+        fileName:file.name
+      });
+
+    };
 
     r.onerror = rej;
+
     r.readAsDataURL(file);
+
   });
+
 }
 
+
+/* =========================
+   RESOURCES
+========================= */
+
 async function uploadResource(){
+
   const f = $('rFile').files[0];
 
   if(!f){
-    $('resourceMsg').textContent = 'Please choose a file.';
+
+    $('resourceMsg').textContent =
+      'Please choose a file.';
+
     return;
+
   }
 
   try{
+
     const x = await fileData(f);
 
     await API.uploadResource(pin,{
@@ -117,364 +716,715 @@ async function uploadResource(){
       description:$('rDesc').value
     });
 
-    $('resourceMsg').textContent = 'Uploaded successfully.';
+    $('resourceMsg').textContent =
+      'Uploaded successfully.';
+
     await loadResources();
 
   }catch(e){
-    $('resourceMsg').textContent = e.message;
+
+    $('resourceMsg').textContent =
+      e.message || 'Upload failed.';
+
   }
+
 }
 
+
 async function loadResources(){
+
   try{
+
     const b = await API.getBooks({});
     const n = await API.getNotes({});
 
-    $('books').textContent = b.length;
-    $('notes').textContent = n.length;
+    $('books').textContent =
+      Array.isArray(b) ? b.length : 0;
+
+    $('notes').textContent =
+      Array.isArray(n) ? n.length : 0;
+
+    const books = Array.isArray(b)
+      ? b.map(x=>row(x,'Books'))
+      : [];
+
+    const notes = Array.isArray(n)
+      ? n.map(x=>row(x,'Notes'))
+      : [];
 
     $('resourceList').innerHTML =
-      [
-        ...b.map(x=>row(x,'Books')),
-        ...n.map(x=>row(x,'Notes'))
-      ].join('') || 'No resources yet.';
+      [...books,...notes].join('') ||
+      'No resources yet.';
 
   }catch(e){
-    console.error(e);
-    $('resourceList').textContent = 'Unable to load resources.';
+
+    console.error(
+      'Resources Error:',
+      e
+    );
+
+    $('resourceList').innerHTML =
+      'Unable to load resources.';
+
   }
+
 }
+
 
 function row(x,t){
-  return `<div class="resource-admin-row">
-    <b>${t}: ${esc(x['Book Name'])}</b>
-    <span>${esc(x.Class)} • ${esc(x.Medium)}</span>
-    <a target="_blank" href="${x['Download URL']}">Download</a>
-    <button class="btn danger" onclick="delResource('${x.ID}','${t}')">Delete</button>
-  </div>`;
+
+  return `
+    <div class="resource-admin-row">
+
+      <b>
+        ${esc(t)}:
+        ${esc(x['Book Name'])}
+      </b>
+
+      <span>
+        ${esc(x.Class)}
+        •
+        ${esc(x.Medium)}
+      </span>
+
+      <a
+        target="_blank"
+        rel="noopener"
+        href="${x['Download URL'] || '#'}"
+      >
+        Download
+      </a>
+
+      <button
+        class="btn danger"
+        onclick="delResource('${x.ID}','${t}')"
+      >
+        Delete
+      </button>
+
+    </div>
+  `;
+
 }
+
 
 async function delResource(id,t){
-  if(!confirm('Delete this resource?')) return;
 
-  await API.deleteResource(pin,id,t);
-  await loadResources();
+  if(!confirm('Delete this resource?')){
+    return;
+  }
+
+  try{
+
+    await API.deleteResource(
+      pin,
+      id,
+      t
+    );
+
+    await loadResources();
+
+  }catch(e){
+
+    alert(
+      e.message ||
+      'Unable to delete resource.'
+    );
+
+  }
+
 }
+
+
+/* =========================
+   NOTICES
+========================= */
 
 async function saveNotice(){
-  await API.saveNotice(pin,{
-    title:$('nTitle').value,
-    message:$('nMessage').value,
-    priority:$('nPriority').value
-  });
 
-  $('nTitle').value='';
-  $('nMessage').value='';
+  try{
 
-  await loadNotices();
+    await API.saveNotice(pin,{
+      title:$('nTitle').value,
+      message:$('nMessage').value,
+      priority:$('nPriority').value
+    });
+
+    $('nTitle').value = '';
+    $('nMessage').value = '';
+
+    await loadNotices();
+
+  }catch(e){
+
+    alert(
+      e.message ||
+      'Unable to save notice.'
+    );
+
+  }
+
 }
+
 
 async function loadNotices(){
-  const a = await API.getNotices();
 
-  $('notices').textContent = a.length;
+  try{
 
-  $('noticeList').innerHTML =
-    a.map(x=>`<div class="resource-admin-row">
-      <b>${esc(x.Title)}</b>
-      <span>${esc(x.Message)}</span>
-      <button class="btn danger" onclick="delNotice('${x.ID}')">Delete</button>
-    </div>`).join('') || 'No notices.';
+    const a = await API.getNotices();
+
+    $('notices').textContent =
+      Array.isArray(a)
+        ? a.length
+        : 0;
+
+    $('noticeList').innerHTML =
+      (Array.isArray(a) ? a : [])
+      .map(x=>`
+
+        <div class="resource-admin-row">
+
+          <b>
+            ${esc(x.Title)}
+          </b>
+
+          <span>
+            ${esc(x.Message)}
+          </span>
+
+          <button
+            class="btn danger"
+            onclick="delNotice('${x.ID}')"
+          >
+            Delete
+          </button>
+
+        </div>
+
+      `)
+      .join('') ||
+      'No notices.';
+
+  }catch(e){
+
+    console.error(
+      'Notice Error:',
+      e
+    );
+
+    $('noticeList').innerHTML =
+      'Unable to load notices.';
+
+  }
+
 }
+
 
 async function delNotice(id){
-  await API.deleteNotice(pin,id);
-  await loadNotices();
+
+  try{
+
+    await API.deleteNotice(
+      pin,
+      id
+    );
+
+    await loadNotices();
+
+  }catch(e){
+
+    alert(
+      e.message ||
+      'Unable to delete notice.'
+    );
+
+  }
+
 }
+
+
+/* =========================
+   GUEST LECTURES
+========================= */
 
 async function saveLecture(){
-  await API.saveGuestLecture(pin,{
-    month:$('gMonth').value,
-    topic:$('gTopic').value,
-    speaker:$('gSpeaker').value,
-    date:$('gDate').value,
-    status:$('gStatus').value
-  });
 
-  await loadLectures();
+  try{
+
+    await API.saveGuestLecture(pin,{
+      month:$('gMonth').value,
+      topic:$('gTopic').value,
+      speaker:$('gSpeaker').value,
+      date:$('gDate').value,
+      status:$('gStatus').value
+    });
+
+    await loadLectures();
+
+  }catch(e){
+
+    alert(
+      e.message ||
+      'Unable to save guest lecture.'
+    );
+
+  }
+
 }
+
 
 async function loadLectures(){
-  const a = await API.getGuestLectures(pin);
 
-  $('lectureList').innerHTML =
-    a.map(x=>`<div class="resource-admin-row">
-      <b>${esc(x.Topic)}</b>
-      <span>${esc(x.Month)} • ${esc(x.Speaker)} • ${esc(x.Date)} • ${esc(x.Status)}</span>
-      <button class="btn danger" onclick="delLecture('${x.ID}')">Delete</button>
-    </div>`).join('') || 'No guest lectures.';
+  try{
+
+    const a =
+      await API.getGuestLectures(pin);
+
+    $('lectureList').innerHTML =
+      (Array.isArray(a) ? a : [])
+      .map(x=>`
+
+        <div class="resource-admin-row">
+
+          <b>
+            ${esc(x.Topic)}
+          </b>
+
+          <span>
+            ${esc(x.Month)}
+            •
+            ${esc(x.Speaker)}
+            •
+            ${esc(x.Date)}
+            •
+            ${esc(x.Status)}
+          </span>
+
+          <button
+            class="btn danger"
+            onclick="delLecture('${x.ID}')"
+          >
+            Delete
+          </button>
+
+        </div>
+
+      `)
+      .join('') ||
+      'No guest lectures.';
+
+  }catch(e){
+
+    console.error(
+      'Guest Lecture Error:',
+      e
+    );
+
+    $('lectureList').innerHTML =
+      'Unable to load guest lectures.';
+
+  }
+
 }
+
 
 async function delLecture(id){
-  await API.deleteGuestLecture(pin,id);
-  await loadLectures();
+
+  try{
+
+    await API.deleteGuestLecture(
+      pin,
+      id
+    );
+
+    await loadLectures();
+
+  }catch(e){
+
+    alert(
+      e.message ||
+      'Unable to delete guest lecture.'
+    );
+
+  }
+
 }
+
+
+/* =========================
+   STAFF
+========================= */
 
 async function saveStaff(){
-  await API.saveStaff(pin,{
-    name:$('sName').value,
-    role:$('sRole').value,
-    department:$('sDept').value,
-    mobile:$('sMobile').value,
-    email:$('sEmail').value
-  });
 
-  await loadStaff();
+  try{
+
+    await API.saveStaff(pin,{
+      name:$('sName').value,
+      role:$('sRole').value,
+      department:$('sDept').value,
+      mobile:$('sMobile').value,
+      email:$('sEmail').value
+    });
+
+    await loadStaff();
+
+  }catch(e){
+
+    alert(
+      e.message ||
+      'Unable to save staff.'
+    );
+
+  }
+
 }
+
 
 async function loadStaff(){
-  const a = await API.getStaff(pin);
 
-  $('staffList').innerHTML =
-    a.map(x=>`<div class="resource-admin-row">
-      <b>${esc(x.Name)}</b>
-      <span>${esc(x.Role)} • ${esc(x.Department)} • ${esc(x.Mobile)}</span>
-      <button class="btn danger" onclick="delStaff('${x.ID}')">Delete</button>
-    </div>`).join('') || 'No staff records.';
+  try{
+
+    const a =
+      await API.getStaff(pin);
+
+    $('staffList').innerHTML =
+      (Array.isArray(a) ? a : [])
+      .map(x=>`
+
+        <div class="resource-admin-row">
+
+          <b>
+            ${esc(x.Name)}
+          </b>
+
+          <span>
+            ${esc(x.Role)}
+            •
+            ${esc(x.Department)}
+            •
+            ${esc(x.Mobile)}
+          </span>
+
+          <button
+            class="btn danger"
+            onclick="delStaff('${x.ID}')"
+          >
+            Delete
+          </button>
+
+        </div>
+
+      `)
+      .join('') ||
+      'No staff records.';
+
+  }catch(e){
+
+    console.error(
+      'Staff Error:',
+      e
+    );
+
+    $('staffList').innerHTML =
+      'Unable to load staff records.';
+
+  }
+
 }
+
 
 async function delStaff(id){
-  await API.deleteStaff(pin,id);
-  await loadStaff();
+
+  try{
+
+    await API.deleteStaff(
+      pin,
+      id
+    );
+
+    await loadStaff();
+
+  }catch(e){
+
+    alert(
+      e.message ||
+      'Unable to delete staff.'
+    );
+
+  }
+
 }
+
+
+/* =========================
+   APPLICATIONS
+========================= */
 
 async function loadApps(){
-  const a = await API.getApplications(pin);
 
-  $('appsList').innerHTML =
-    a.map(x=>`<div class="resource-admin-row">
-      <b>${esc(x.Type)}</b>
-      <span>${esc(x.Applicant)} • ${esc(x.Class)} • ${esc(x.Mobile)} • ${esc(x.Status)}</span>
-    </div>`).join('') || 'No applications found.';
+  try{
+
+    const a =
+      await API.getApplications(pin);
+
+    $('appsList').innerHTML =
+      (Array.isArray(a) ? a : [])
+      .map(x=>`
+
+        <div class="resource-admin-row">
+
+          <b>
+            ${esc(x.Type)}
+          </b>
+
+          <span>
+            ${esc(x.Applicant)}
+            •
+            ${esc(x.Class)}
+            •
+            ${esc(x.Mobile)}
+            •
+            ${esc(x.Status)}
+          </span>
+
+        </div>
+
+      `)
+      .join('') ||
+      'No applications found.';
+
+  }catch(e){
+
+    console.error(
+      'Applications Error:',
+      e
+    );
+
+    $('appsList').innerHTML =
+      'Unable to load applications.';
+
+  }
+
 }
+
+
+/* =========================
+   DOCUMENTS
+========================= */
 
 async function uploadDoc(){
-  const f = $('dFile').files[0];
 
-  if(!f) return;
+  const f =
+    $('dFile').files[0];
 
-  const x = await fileData(f);
+  if(!f){
 
-  await API.uploadDocument(pin,{
-    ...x,
-    type:$('dType').value,
-    title:$('dTitle').value,
-    Class:$('dClass').value,
-    Medium:$('dMedium').value
-  });
+    alert('Please choose a file.');
 
-  await loadDocs();
+    return;
+
+  }
+
+  try{
+
+    const x =
+      await fileData(f);
+
+    await API.uploadDocument(pin,{
+      ...x,
+      type:$('dType').value,
+      title:$('dTitle').value,
+      Class:$('dClass').value,
+      Medium:$('dMedium').value
+    });
+
+    await loadDocs();
+
+  }catch(e){
+
+    alert(
+      e.message ||
+      'Unable to upload document.'
+    );
+
+  }
+
 }
+
 
 async function loadDocs(){
-  const a = await API.getDocuments(pin);
 
-  $('docsList').innerHTML =
-    a.map(x=>`<div class="resource-admin-row">
-      <b>${esc(x.Title)}</b>
-      <span>${esc(x.Type)} • ${esc(x.Class)} • ${esc(x.Medium)}</span>
-      <a target="_blank" href="${x['Download URL']}">Download</a>
-    </div>`).join('') || 'No documents.';
+  try{
+
+    const a =
+      await API.getDocuments(pin);
+
+    $('docsList').innerHTML =
+      (Array.isArray(a) ? a : [])
+      .map(x=>`
+
+        <div class="resource-admin-row">
+
+          <b>
+            ${esc(x.Title)}
+          </b>
+
+          <span>
+            ${esc(x.Type)}
+            •
+            ${esc(x.Class)}
+            •
+            ${esc(x.Medium)}
+          </span>
+
+          <a
+            target="_blank"
+            rel="noopener"
+            href="${x['Download URL'] || '#'}"
+          >
+            Download
+          </a>
+
+        </div>
+
+      `)
+      .join('') ||
+      'No documents.';
+
+  }catch(e){
+
+    console.error(
+      'Documents Error:',
+      e
+    );
+
+    $('docsList').innerHTML =
+      'Unable to load documents.';
+
+  }
+
 }
+
+
+/* =========================
+   CERTIFICATE
+========================= */
 
 function printCertificate(){
-  const n = esc($('cName').value);
-  const cl = esc($('cClass').value);
-  const t = esc($('cTitle').value);
-  const d = esc($('cDate').value);
-  const topic = esc($('cTopic').value);
 
-  const w = window.open('','_blank');
+  const n =
+    esc($('cName').value);
+
+  const cl =
+    esc($('cClass').value);
+
+  const t =
+    esc($('cTitle').value);
+
+  const d =
+    esc($('cDate').value);
+
+  const topic =
+    esc($('cTopic').value);
+
+  const w =
+    window.open(
+      '',
+      '_blank'
+    );
+
+  if(!w){
+
+    alert(
+      'Please allow pop-ups for certificate printing.'
+    );
+
+    return;
+
+  }
 
   w.document.write(`
-    <html>
-      <head>
-        <style>
-          body{
-            font-family:Georgia,serif;
-            padding:60px;
-            text-align:center
-          }
-          .cert{
-            border:12px double #1769d1;
-            padding:70px 50px;
-            min-height:520px
-          }
-          h1{font-size:38px}
-          h2{font-size:26px}
-          p{
-            font-size:19px;
-            line-height:1.8
-          }
-        </style>
-      </head>
-      <body>
-        <div class="cert">
-          <h1>${t}</h1>
-          <p>This certificate is presented to</p>
-          <h2>${n}</h2>
-          <p>Class: ${cl}</p>
-          <p>for participation in <b>${topic}</b>.</p>
-          <p>Date: ${d}</p>
-          <br>
-          <p>
-            ________________________<br>
-            Authorized Signatory
-          </p>
-        </div>
-        <script>window.print()<\/script>
-      </body>
-    </html>
-  `);
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${t}</title>
+
+<style>
+
+body{
+  font-family:Georgia,serif;
+  padding:60px;
+  text-align:center;
 }
-</script>
+
+.cert{
+  border:12px double #1769d1;
+  padding:70px 50px;
+  min-height:520px;
+}
+
+h1{
+  font-size:38px;
+}
+
+h2{
+  font-size:26px;
+}
+
+p{
+  font-size:19px;
+  line-height:1.8;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="cert">
+
+<h1>${t}</h1>
+
+<p>This certificate is presented to</p>
+
+<h2>${n}</h2>
+
+<p>Class: ${cl}</p>
+
+<p>
+for participation in
+<b>${topic}</b>.
+</p>
+
+<p>Date: ${d}</p>
+
+<br>
+
+<p>
+________________________<br>
+Authorized Signatory
+</p>
+
+</div>
+
+<script>
+window.onload=function(){
+  window.print();
+};
+<\/script>
+
 </body>
 </html>
-let pin = '';
-const $ = id => document.getElementById(id);
-
-async function login() {
-  pin = $('pin').value.trim();
-
-  if (!pin) {
-    $('msg').textContent = 'Please enter Admin PIN.';
-    return;
-  }
-
-  $('msg').textContent = 'Verifying PIN...';
-
-  try {
-    const result = await API.verifyAdmin(pin);
-
-    console.log('Command Center login response:', result);
-
-    if (!result || result.valid !== true) {
-      throw new Error('Invalid Admin PIN');
-    }
-
-    $('login').classList.add('hiasync function login() {
-  const enteredPin = $('pin').value.trim();
-
-  if (!enteredPin) {
-    $('msg').textContent = 'Please enter Admin PIN.';
-    return;
-  }
-
-  $('msg').textContent = 'Verifying PIN...';
-
-  try {
-    const result = await API.verifyAdmin(enteredPin);
-
-    if (!result || result.valid !== true) {
-      $('msg').textContent = 'Invalid Admin PIN.';
-      return;
-    }
-
-    pin = enteredPin;
-    $('login').classList.add('hidden');
-    $('panel').classList.remove('hidden');
-    $('msg').textContent = '';
-
-    await loadAll();
-
-  } catch (e) {
-    $('msg').textContent =
-      'Login failed: ' + (e && e.message ? e.message : 'Unable to connect.');
-  }
-}dden');
-    $('panel').classList.remove('hidden');
-    $('msg').textContent = '';
-
-    await loadAll();
-
-  } catch (e) {
-    console.error('Command Center Login Error:', e);
-    $('msg').textContent = 'Login failed: ' + (e.message || 'Unable to connect to server.');
-  }
-}
-function tab(id){document.querySelectorAll('.admin-section').forEach(x=>x.classList.add('hidden'));$(id).classList.remove('hidden');if(id==='resources')loadResources();if(id==='notice')loadNotices();if(id==='lecture')loadLectures();if(id==='staff')loadStaff();if(id==='apps')loadApps();if(id==='docs')loadDocs();}
-async function loadAll(){try{const s=await API.getStats(pin,{});$('students').textContent=s.total||s.students||0;}catch(e){}loadResources();loadNotices();}
-async function fileData(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res({base64:r.result,mimeType:file.type,fileName:file.name});r.onerror=rej;r.readAsDataURL(file);});}
-async function uploadResource(){const f=$('rFile').files[0];if(!f)return $('resourceMsg').textContent='Please choose a file.';try{const x=await fileData(f);await API.uploadResource(pin,{...x,category:$('rCategory').value,Class:$('rClass').value,Medium:$('rMedium').value,bookName:$('rName').value,trade:$('rTrade').value,description:$('rDesc').value});$('resourceMsg').textContent='Uploaded successfully.';loadResources();}catch(e){$('resourceMsg').textContent=e.message;}}
-async function loadResources(){const b=await API.getBooks({}),n=await API.getNotes({});$('books').textContent=b.length;$('notes').textContent=n.length;$('resourceList').innerHTML=[...b.map(x=>row(x,'Books')),...n.map(x=>row(x,'Notes'))].join('')||'No resources yet.';}
-function row(x,t){return `<div class="resource-admin-row"><b>${t}: ${esc(x['Book Name'])}</b><span>${x.Class} • ${x.Medium}</span><a target="_blank" href="${x['Download URL']}">Download</a><button class="btn danger" onclick="delResource('${x.ID}','${t}')">Delete</button></div>`}
-async function delResource(id,t){if(!confirm('Delete this resource?'))return;await API.deleteResource(pin,id,t);loadResources();}
-async function saveNotice(){await API.saveNotice(pin,{title:$('nTitle').value,message:$('nMessage').value,priority:$('nPriority').value});$('nTitle').value='';$('nMessage').value='';loadNotices();}
-async function loadNotices(){const a=await API.getNotices();$('notices').textContent=a.length;$('noticeList').innerHTML=a.map(x=>`<div class="resource-admin-row"><b>${esc(x.Title)}</b><span>${esc(x.Message)}</span><button class="btn danger" onclick="delNotice('${x.ID}')">Delete</button></div>`).join('')||'No notices.';}
-async function delNotice(id){await API.deleteNotice(pin,id);loadNotices();}
-async function saveLecture(){await API.saveGuestLecture(pin,{month:$('gMonth').value,topic:$('gTopic').value,speaker:$('gSpeaker').value,date:$('gDate').value,status:$('gStatus').value});loadLectures();}
-async function loadLectures(){const a=await API.getGuestLectures(pin);$('lectureList').innerHTML=a.map(x=>`<div class="resource-admin-row"><b>${esc(x.Topic)}</b><span>${esc(x.Month)} • ${esc(x.Speaker)} • ${esc(x.Date)} • ${esc(x.Status)}</span><button class="btn danger" onclick="delLecture('${x.ID}')">Delete</button></div>`).join('')||'No guest lectures.';}
-async function delLecture(id){await API.deleteGuestLecture(pin,id);loadLectures();}
-async function saveStaff(){await API.saveStaff(pin,{name:$('sName').value,role:$('sRole').value,department:$('sDept').value,mobile:$('sMobile').value,email:$('sEmail').value});loadStaff();}
-async function loadStaff(){const a=await API.getStaff(pin);$('staffList').innerHTML=a.map(x=>`<div class="resource-admin-row"><b>${esc(x.Name)}</b><span>${esc(x.Role)} • ${esc(x.Department)} • ${esc(x.Mobile)}</span><button class="btn danger" onclick="delStaff('${x.ID}')">Delete</button></div>`).join('')||'No staff records.';}
-async function delStaff(id){await API.deleteStaff(pin,id);loadStaff();}
-async function loadApps(){const a=await API.getApplications(pin);$('appsList').innerHTML=a.map(x=>`<div class="resource-admin-row"><b>${esc(x.Type)}</b><span>${esc(x.Applicant)} • ${esc(x.Class)} • ${esc(x.Mobile)} • ${esc(x.Status)}</span></div>`).join('')||'No applications found.';}
-async function uploadDoc(){const f=$('dFile').files[0];if(!f)return;const x=await fileData(f);await API.uploadDocument(pin,{...x,type:$('dType').value,title:$('dTitle').value,Class:$('dClass').value,Medium:$('dMedium').value});loadDocs();}
-async function loadDocs(){const a=await API.getDocuments(pin);$('docsList').innerHTML=a.map(x=>`<div class="resource-admin-row"><b>${esc(x.Title)}</b><span>${esc(x.Type)} • ${esc(x.Class)} • ${esc(x.Medium)}</span><a target="_blank" href="${x['Download URL']}">Download</a></div>`).join('')||'No documents.';}
-function printCertificate(){
-  const n=esc($('cName').value),
-        cl=esc($('cClass').value),
-        t=esc($('cTitle').value),
-        d=esc($('cDate').value),
-        topic=esc($('cTopic').value);
-
-  const w=window.open('','_blank');
-
-  w.document.write(`
-    <html>
-      <head>
-        <style>
-          body{
-            font-family:Georgia,serif;
-            padding:60px;
-            text-align:center
-          }
-          .cert{
-            border:12px double #1769d1;
-            padding:70px 50px;
-            min-height:520px
-          }
-          h1{
-            font-size:38px
-          }
-          h2{
-            font-size:26px
-          }
-          p{
-            font-size:19px;
-            line-height:1.8
-          }
-        </style>
-      </head>
-      <body>
-        <div class="cert">
-          <h1>${t}</h1>
-          <p>This certificate is presented to</p>
-          <h2>${n}</h2>
-          <p>Class: ${cl}</p>
-          <p>for participation in <b>${topic}</b>.</p>
-          <p>Date: ${d}</p>
-          <br>
-          <p>
-            ________________________<br>
-            Authorized Signatory
-          </p>
-        </div>
-        <script>window.print()<\/script>
-      </body>
-    </html>
   `);
+
+  w.document.close();
+
 }
+
 </script>
+
 </body>
 </html>
