@@ -6,7 +6,39 @@
 <section id="apps" class="admin-section hidden"><div class="card"><h2>Application Management</h2><p class="muted">Existing application records are shown here when your Apps Script application flow writes to the Applications sheet.</p><div id="appsList" class="table-wrap"></div></div></section>
 <section id="docs" class="admin-section hidden"><div class="card"><h2>Document Management</h2><div class="grid"><input id="dType" placeholder="Document Type"><input id="dTitle" placeholder="Document Title"><input id="dClass" placeholder="Class"><select id="dMedium"><option value="">Medium</option><option>Hindi</option><option>English</option></select><input id="dFile" type="file"></div><button class="btn primary" onclick="uploadDoc()">Upload Document</button><div id="docsList" class="table-wrap" style="margin-top:15px"></div></div></section>
 <section id="certificate" class="admin-section hidden"><div class="card"><h2>Certificate / Document Generator</h2><p class="muted">Generate a clean printable certificate from entered details. This is a template and should be adapted to the school's officially approved format before official use.</p><div class="grid"><input id="cName" placeholder="Student Name"><input id="cClass" placeholder="Class"><input id="cTitle" value="Certificate of Participation" placeholder="Certificate Title"><input id="cDate" type="date"><input id="cTopic" placeholder="Programme / Topic"></div><button class="btn primary" onclick="printCertificate()">Generate & Print</button></div></section></div></div></main><script src="js/config.js"></script><script src="js/api.js"></script><script>
-let pin=''; const $=id=>document.getElementById(id); async function login(){pin=$('pin').value;try{const r=await API.verifyAdmin(pin);if(!r.valid)throw Error('Invalid PIN');$('login').classList.add('hidden');$('panel').classList.remove('hidden');loadAll();}catch(e){$('msg').textContent=e.message;}}
+let pin = '';
+const $ = id => document.getElementById(id);
+
+async function login() {
+  pin = $('pin').value.trim();
+
+  if (!pin) {
+    $('msg').textContent = 'Please enter Admin PIN.';
+    return;
+  }
+
+  $('msg').textContent = 'Verifying PIN...';
+
+  try {
+    const result = await API.verifyAdmin(pin);
+
+    console.log('Command Center login response:', result);
+
+    if (!result || result.valid !== true) {
+      throw new Error('Invalid Admin PIN');
+    }
+
+    $('login').classList.add('hidden');
+    $('panel').classList.remove('hidden');
+    $('msg').textContent = '';
+
+    await loadAll();
+
+  } catch (e) {
+    console.error('Command Center Login Error:', e);
+    $('msg').textContent = 'Login failed: ' + (e.message || 'Unable to connect to server.');
+  }
+}
 function tab(id){document.querySelectorAll('.admin-section').forEach(x=>x.classList.add('hidden'));$(id).classList.remove('hidden');if(id==='resources')loadResources();if(id==='notice')loadNotices();if(id==='lecture')loadLectures();if(id==='staff')loadStaff();if(id==='apps')loadApps();if(id==='docs')loadDocs();}
 async function loadAll(){try{const s=await API.getStats(pin,{});$('students').textContent=s.total||s.students||0;}catch(e){}loadResources();loadNotices();}
 async function fileData(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res({base64:r.result,mimeType:file.type,fileName:file.name});r.onerror=rej;r.readAsDataURL(file);});}
