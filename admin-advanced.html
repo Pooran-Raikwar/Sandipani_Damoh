@@ -36,7 +36,10 @@
     >
 
     <div>
-      <div class="school-name">Sandipani Advanced Command Center</div>
+      <div class="school-name">
+        Sandipani Advanced Command Center
+      </div>
+
       <div class="school-sub">
         Resources • Notices • Guest Lectures • Staff • Applications • Documents
       </div>
@@ -51,10 +54,13 @@
   </div>
 </header>
 
+
 <main class="main">
 <div class="container">
 
-<!-- LOGIN -->
+
+<!-- ================= LOGIN ================= -->
+
 <div id="login" class="card">
 
   <span class="badge">ADMIN ONLY</span>
@@ -62,444 +68,656 @@
   <h1>Command Center Login</h1>
 
   <div class="grid">
+
     <div class="field">
       <label>Admin PIN</label>
+
       <input
         id="pin"
         type="password"
         inputmode="numeric"
         autocomplete="off"
+        placeholder="Enter Admin PIN"
       >
     </div>
+
   </div>
 
-  <button class="btn primary" onclick="login()">Login</button>
+  <button
+    class="btn primary"
+    type="button"
+    onclick="login()"
+  >
+    Login
+  </button>
 
   <div id="msg" class="message"></div>
 
 </div>
 
 
-<!-- ADMIN PANEL -->
+<!-- ================= ADMIN PANEL ================= -->
+
 <div id="panel" class="hidden">
 
-  <!-- STATS -->
-  <div class="stats">
 
-    <div class="stat">
-      <small>Students</small>
-      <b id="students">—</b>
-    </div>
+<!-- ================= STATS ================= -->
 
-    <div class="stat">
-      <small>Books</small>
-      <b id="books">0</b>
-    </div>
+<div class="stats">
 
-    <div class="stat">
-      <small>Notes</small>
-      <b id="notes">0</b>
-    </div>
-
-    <div class="stat">
-      <small>Notices</small>
-      <b id="notices">0</b>
-    </div>
-
+  <div class="stat">
+    <small>Students</small>
+    <b id="students">—</b>
   </div>
 
-
-  <!-- TABS -->
-  <div class="tabs">
-
-    <button class="tab active" onclick="tab('resources')">
-      📚 Books & Notes
-    </button>
-
-    <button class="tab" onclick="tab('notice')">
-      🔔 Notices
-    </button>
-
-    <button class="tab" onclick="tab('lecture')">
-      🎤 Guest Lectures
-    </button>
-
-    <button class="tab" onclick="tab('staff')">
-      👨‍🏫 Staff
-    </button>
-
-    <button class="tab" onclick="tab('apps')">
-      📨 Applications
-    </button>
-
-    <button class="tab" onclick="tab('docs')">
-      📄 Documents
-    </button>
-
-    <button class="tab" onclick="tab('certificate')">
-      🏅 Certificate
-    </button>
-
+  <div class="stat">
+    <small>Books</small>
+    <b id="books">0</b>
   </div>
 
-
-  <!-- BOOKS / NOTES -->
-  <section id="resources" class="admin-section">
-
-    <div class="card">
-
-      <h2>Upload Books / Notes</h2>
-
-      <p class="muted">
-        9th–12th • Hindi / English • PDF or supported document.
-        Maximum 20 MB.
-      </p>
-
-      <div class="grid">
-
-        <div class="field">
-          <label>Category</label>
-          <select id="rCategory">
-            <option>Books</option>
-            <option>Notes</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Class</label>
-          <select id="rClass">
-            <option>9th</option>
-            <option>10th</option>
-            <option>11th</option>
-            <option>12th</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Medium</label>
-          <select id="rMedium">
-            <option>Hindi</option>
-            <option>English</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Book / Note Name</label>
-          <input
-            id="rName"
-            placeholder="e.g. Information Technology Class 9"
-          >
-        </div>
-
-        <div class="field">
-          <label>Trade</label>
-          <input id="rTrade" value="Vocational">
-        </div>
-
-        <div class="field">
-          <label>File</label>
-          <input
-            id="rFile"
-            type="file"
-            accept=".pdf,.doc,.docx,.ppt,.pptx"
-          >
-        </div>
-
-        <div class="field">
-          <label>Description</label>
-          <textarea
-            id="rDesc"
-            placeholder="Short description"
-          ></textarea>
-        </div>
-
-      </div>
-
-      <button class="btn primary" onclick="uploadResource()">
-        Upload Resource
-      </button>
-
-      <div id="resourceMsg" class="message"></div>
-
-    </div>
-
-
-    <div class="card">
-
-      <h3>Existing Resources</h3>
-
-      <div id="resourceList" class="table-wrap">
-        Loading resources...
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- NOTICE -->
-  <section id="notice" class="admin-section hidden">
-
-    <div class="card">
-
-      <h2>Notice & Notification System</h2>
-
-      <div class="grid">
-
-        <div class="field">
-          <label>Title</label>
-          <input id="nTitle">
-        </div>
-
-        <div class="field">
-          <label>Priority</label>
-          <select id="nPriority">
-            <option>Normal</option>
-            <option>Important</option>
-            <option>Urgent</option>
-          </select>
-        </div>
-
-      </div>
-
-      <div class="field">
-        <label>Message</label>
-        <textarea id="nMessage"></textarea>
-      </div>
-
-      <button class="btn primary" onclick="saveNotice()">
-        Publish Notice
-      </button>
-
-      <div
-        id="noticeList"
-        class="table-wrap"
-        style="margin-top:15px"
-      ></div>
-
-    </div>
-
-  </section>
-
-
-  <!-- GUEST LECTURES -->
-  <section id="lecture" class="admin-section hidden">
-
-    <div class="card">
-
-      <h2>Guest Lecture Management</h2>
-
-      <div class="grid">
-
-        <div class="field">
-          <label>Month</label>
-          <input id="gMonth" placeholder="Month">
-        </div>
-
-        <div class="field">
-          <label>Topic</label>
-          <input id="gTopic">
-        </div>
-
-        <div class="field">
-          <label>Speaker</label>
-          <input id="gSpeaker">
-        </div>
-
-        <div class="field">
-          <label>Date</label>
-          <input id="gDate" type="date">
-        </div>
-
-        <div class="field">
-          <label>Status</label>
-          <select id="gStatus">
-            <option>Planned</option>
-            <option>Completed</option>
-            <option>Cancelled</option>
-          </select>
-        </div>
-
-      </div>
-
-      <button class="btn primary" onclick="saveLecture()">
-        Save Guest Lecture
-      </button>
-
-      <div
-        id="lectureList"
-        class="table-wrap"
-        style="margin-top:15px"
-      ></div>
-
-    </div>
-
-  </section>
-
-
-  <!-- STAFF -->
-  <section id="staff" class="admin-section hidden">
-
-    <div class="card">
-
-      <h2>Teacher / Staff Records</h2>
-
-      <div class="grid">
-
-        <input id="sName" placeholder="Name">
-        <input id="sRole" placeholder="Role">
-        <input id="sDept" placeholder="Department">
-        <input id="sMobile" placeholder="Mobile">
-        <input id="sEmail" placeholder="Email">
-
-      </div>
-
-      <button class="btn primary" onclick="saveStaff()">
-        Save Staff
-      </button>
-
-      <div
-        id="staffList"
-        class="table-wrap"
-        style="margin-top:15px"
-      ></div>
-
-    </div>
-
-  </section>
-
-
-  <!-- APPLICATIONS -->
-  <section id="apps" class="admin-section hidden">
-
-    <div class="card">
-
-      <h2>Application Management</h2>
-
-      <p class="muted">
-        Existing application records are shown here when your Apps Script
-        application flow writes to the Applications sheet.
-      </p>
-
-      <div id="appsList" class="table-wrap">
-        Loading applications...
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- DOCUMENTS -->
-  <section id="docs" class="admin-section hidden">
-
-    <div class="card">
-
-      <h2>Document Management</h2>
-
-      <div class="grid">
-
-        <input
-          id="dType"
-          placeholder="Document Type"
-        >
-
-        <input
-          id="dTitle"
-          placeholder="Document Title"
-        >
-
-        <input
-          id="dClass"
-          placeholder="Class"
-        >
-
-        <select id="dMedium">
-          <option value="">Medium</option>
-          <option>Hindi</option>
-          <option>English</option>
-        </select>
-
-        <input
-          id="dFile"
-          type="file"
-        >
-
-      </div>
-
-      <button class="btn primary" onclick="uploadDoc()">
-        Upload Document
-      </button>
-
-      <div
-        id="docsList"
-        class="table-wrap"
-        style="margin-top:15px"
-      ></div>
-
-    </div>
-
-  </section>
-
-
-  <!-- CERTIFICATE -->
-  <section id="certificate" class="admin-section hidden">
-
-    <div class="card">
-
-      <h2>Certificate / Document Generator</h2>
-
-      <p class="muted">
-        Generate a clean printable certificate from entered details.
-        This is a template and should be adapted to the school's officially
-        approved format before official use.
-      </p>
-
-      <div class="grid">
-
-        <input
-          id="cName"
-          placeholder="Student Name"
-        >
-
-        <input
-          id="cClass"
-          placeholder="Class"
-        >
-
-        <input
-          id="cTitle"
-          value="Certificate of Participation"
-          placeholder="Certificate Title"
-        >
-
-        <input
-          id="cDate"
-          type="date"
-        >
-
-        <input
-          id="cTopic"
-          placeholder="Programme / Topic"
-        >
-
-      </div>
-
-      <button class="btn primary" onclick="printCertificate()">
-        Generate & Print
-      </button>
-
-    </div>
-
-  </section>
+  <div class="stat">
+    <small>Notes</small>
+    <b id="notes">0</b>
+  </div>
+
+  <div class="stat">
+    <small>Notices</small>
+    <b id="notices">0</b>
+  </div>
 
 </div>
 
+
+<!-- ================= TABS ================= -->
+
+<div class="tabs">
+
+  <button
+    class="tab active"
+    type="button"
+    onclick="tab('resources')"
+  >
+    📚 Books & Notes
+  </button>
+
+  <button
+    class="tab"
+    type="button"
+    onclick="tab('notice')"
+  >
+    🔔 Notices
+  </button>
+
+  <button
+    class="tab"
+    type="button"
+    onclick="tab('lecture')"
+  >
+    🎤 Guest Lectures
+  </button>
+
+  <button
+    class="tab"
+    type="button"
+    onclick="tab('staff')"
+  >
+    👨‍🏫 Staff
+  </button>
+
+  <button
+    class="tab"
+    type="button"
+    onclick="tab('apps')"
+  >
+    📨 Applications
+  </button>
+
+  <button
+    class="tab"
+    type="button"
+    onclick="tab('docs')"
+  >
+    📄 Documents
+  </button>
+
+  <button
+    class="tab"
+    type="button"
+    onclick="tab('certificate')"
+  >
+    🏅 Certificate
+  </button>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- ================= RESOURCES ====================== -->
+<!-- ================================================= -->
+
+<section
+  id="resources"
+  class="admin-section"
+>
+
+  <div class="card">
+
+    <h2>Upload Books / Notes</h2>
+
+    <p class="muted">
+      9th–12th • Hindi / English • PDF or supported document.
+      Maximum 20 MB.
+    </p>
+
+    <div class="grid">
+
+      <div class="field">
+        <label>Category</label>
+
+        <select id="rCategory">
+          <option>Books</option>
+          <option>Notes</option>
+        </select>
+      </div>
+
+
+      <div class="field">
+        <label>Class</label>
+
+        <select id="rClass">
+          <option>9th</option>
+          <option>10th</option>
+          <option>11th</option>
+          <option>12th</option>
+        </select>
+      </div>
+
+
+      <div class="field">
+        <label>Medium</label>
+
+        <select id="rMedium">
+          <option>Hindi</option>
+          <option>English</option>
+        </select>
+      </div>
+
+
+      <div class="field">
+        <label>Book / Note Name</label>
+
+        <input
+          id="rName"
+          placeholder="e.g. Information Technology Class 9"
+        >
+      </div>
+
+
+      <div class="field">
+        <label>Trade</label>
+
+        <input
+          id="rTrade"
+          value="Vocational"
+        >
+      </div>
+
+
+      <div class="field">
+        <label>File</label>
+
+        <input
+          id="rFile"
+          type="file"
+          accept=".pdf,.doc,.docx,.ppt,.pptx"
+        >
+      </div>
+
+
+      <div class="field">
+        <label>Description</label>
+
+        <textarea
+          id="rDesc"
+          placeholder="Short description"
+        ></textarea>
+      </div>
+
+    </div>
+
+
+    <button
+      class="btn primary"
+      type="button"
+      onclick="uploadResource()"
+    >
+      Upload Resource
+    </button>
+
+    <div
+      id="resourceMsg"
+      class="message"
+    ></div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>Existing Resources</h3>
+
+    <div
+      id="resourceList"
+      class="table-wrap"
+    ></div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- ================= NOTICE ========================= -->
+<!-- ================================================= -->
+
+<section
+  id="notice"
+  class="admin-section hidden"
+>
+
+  <div class="card">
+
+    <h2>Notice & Notification System</h2>
+
+    <div class="grid">
+
+      <div class="field">
+
+        <label>Title</label>
+
+        <input id="nTitle">
+
+      </div>
+
+
+      <div class="field">
+
+        <label>Priority</label>
+
+        <select id="nPriority">
+          <option>Normal</option>
+          <option>Important</option>
+          <option>Urgent</option>
+        </select>
+
+      </div>
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Message</label>
+
+      <textarea id="nMessage"></textarea>
+
+    </div>
+
+
+    <button
+      class="btn primary"
+      type="button"
+      onclick="saveNotice()"
+    >
+      Publish Notice
+    </button>
+
+
+    <div
+      id="noticeList"
+      class="table-wrap"
+      style="margin-top:15px"
+    ></div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- ================ GUEST LECTURES ================= -->
+<!-- ================================================= -->
+
+<section
+  id="lecture"
+  class="admin-section hidden"
+>
+
+  <div class="card">
+
+    <h2>Guest Lecture Management</h2>
+
+    <div class="grid">
+
+      <div class="field">
+
+        <label>Month</label>
+
+        <input
+          id="gMonth"
+          placeholder="Month"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label>Topic</label>
+
+        <input id="gTopic">
+
+      </div>
+
+
+      <div class="field">
+
+        <label>Speaker</label>
+
+        <input id="gSpeaker">
+
+      </div>
+
+
+      <div class="field">
+
+        <label>Date</label>
+
+        <input
+          id="gDate"
+          type="date"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label>Status</label>
+
+        <select id="gStatus">
+          <option>Planned</option>
+          <option>Completed</option>
+          <option>Cancelled</option>
+        </select>
+
+      </div>
+
+    </div>
+
+
+    <button
+      class="btn primary"
+      type="button"
+      onclick="saveLecture()"
+    >
+      Save Guest Lecture
+    </button>
+
+
+    <div
+      id="lectureList"
+      class="table-wrap"
+      style="margin-top:15px"
+    ></div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- ================= STAFF ========================== -->
+<!-- ================================================= -->
+
+<section
+  id="staff"
+  class="admin-section hidden"
+>
+
+  <div class="card">
+
+    <h2>Teacher / Staff Records</h2>
+
+    <div class="grid">
+
+      <input
+        id="sName"
+        placeholder="Name"
+      >
+
+      <input
+        id="sRole"
+        placeholder="Role"
+      >
+
+      <input
+        id="sDept"
+        placeholder="Department"
+      >
+
+      <input
+        id="sMobile"
+        placeholder="Mobile"
+      >
+
+      <input
+        id="sEmail"
+        placeholder="Email"
+      >
+
+    </div>
+
+
+    <button
+      class="btn primary"
+      type="button"
+      onclick="saveStaff()"
+    >
+      Save Staff
+    </button>
+
+
+    <div
+      id="staffList"
+      class="table-wrap"
+      style="margin-top:15px"
+    ></div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- ================= APPLICATIONS ================== -->
+<!-- ================================================= -->
+
+<section
+  id="apps"
+  class="admin-section hidden"
+>
+
+  <div class="card">
+
+    <h2>Application Management</h2>
+
+    <p class="muted">
+      Existing application records are shown here when your
+      Apps Script application flow writes to the Applications sheet.
+    </p>
+
+
+    <div
+      id="appsList"
+      class="table-wrap"
+    ></div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- ================= DOCUMENTS ===================== -->
+<!-- ================================================= -->
+
+<section
+  id="docs"
+  class="admin-section hidden"
+>
+
+  <div class="card">
+
+    <h2>Document Management</h2>
+
+    <div class="grid">
+
+      <input
+        id="dType"
+        placeholder="Document Type"
+      >
+
+      <input
+        id="dTitle"
+        placeholder="Document Title"
+      >
+
+      <input
+        id="dClass"
+        placeholder="Class"
+      >
+
+      <select id="dMedium">
+
+        <option value="">
+          Medium
+        </option>
+
+        <option>
+          Hindi
+        </option>
+
+        <option>
+          English
+        </option>
+
+      </select>
+
+
+      <input
+        id="dFile"
+        type="file"
+      >
+
+    </div>
+
+
+    <button
+      class="btn primary"
+      type="button"
+      onclick="uploadDoc()"
+    >
+      Upload Document
+    </button>
+
+
+    <div
+      id="docsList"
+      class="table-wrap"
+      style="margin-top:15px"
+    ></div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- ================= CERTIFICATE =================== -->
+<!-- ================================================= -->
+
+<section
+  id="certificate"
+  class="admin-section hidden"
+>
+
+  <div class="card">
+
+    <h2>
+      Certificate / Document Generator
+    </h2>
+
+    <p class="muted">
+      Generate a clean printable certificate from entered details.
+      This is a template and should be adapted to the school's
+      officially approved format before official use.
+    </p>
+
+
+    <div class="grid">
+
+      <input
+        id="cName"
+        placeholder="Student Name"
+      >
+
+      <input
+        id="cClass"
+        placeholder="Class"
+      >
+
+      <input
+        id="cTitle"
+        value="Certificate of Participation"
+        placeholder="Certificate Title"
+      >
+
+      <input
+        id="cDate"
+        type="date"
+      >
+
+      <input
+        id="cTopic"
+        placeholder="Programme / Topic"
+      >
+
+    </div>
+
+
+    <button
+      class="btn primary"
+      type="button"
+      onclick="printCertificate()"
+    >
+      Generate & Print
+    </button>
+
+  </div>
+
+</section>
+
+
+</div>
 </div>
 </main>
 
 
-<!-- JAVASCRIPT -->
+<!-- ================================================= -->
+<!-- ================= JAVASCRIPT ==================== -->
+<!-- ================================================= -->
+
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
 
@@ -507,176 +725,206 @@
 
 let pin = '';
 
-const $ = id => document.getElementById(id);
+const $ = function(id) {
+  return document.getElementById(id);
+};
 
 
-/* =========================
-   ESCAPE HTML
-========================= */
+/* ================= ESCAPE HTML ================= */
 
-function esc(v){
-  return String(v ?? '').replace(/[&<>"']/g,m=>({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;',
-    '"':'&quot;',
-    "'":'&#039;'
-  }[m]));
+function esc(v) {
+
+  return String(v ?? '').replace(
+    /[&<>"']/g,
+    function(m) {
+
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[m];
+
+    }
+  );
+
 }
 
 
-/* =========================
-   LOGIN
-========================= */
+/* ================= LOGIN ================= */
 
-async function login(){
+async function login() {
 
   const enteredPin = $('pin').value.trim();
 
-  if(!enteredPin){
-    $('msg').textContent = 'Please enter Admin PIN.';
+  if (!enteredPin) {
+
+    $('msg').textContent =
+      'Please enter Admin PIN.';
+
     return;
   }
 
-  $('msg').textContent = 'Verifying PIN...';
 
-  try{
+  $('msg').textContent =
+    'Verifying PIN...';
 
-    const result = await API.verifyAdmin(enteredPin);
 
-    console.log(
-      'Command Center login response:',
-      result
-    );
+  try {
 
-    if(!result || result.valid !== true){
+    const result =
+      await API.verifyAdmin(enteredPin);
 
-      $('msg').textContent = 'Invalid Admin PIN.';
+
+    if (!result || result.valid !== true) {
+
+      $('msg').textContent =
+        'Invalid Admin PIN.';
+
       return;
-
     }
+
 
     pin = enteredPin;
 
+
     $('login').classList.add('hidden');
+
     $('panel').classList.remove('hidden');
 
     $('msg').textContent = '';
 
+
     await loadAll();
 
-  }catch(e){
+
+  } catch (e) {
 
     console.error(
       'Command Center Login Error:',
       e
     );
 
+
     $('msg').textContent =
       'Login failed: ' +
-      (e && e.message
-        ? e.message
-        : 'Unable to connect to server.');
+      (
+        e && e.message
+          ? e.message
+          : 'Unable to connect.'
+      );
 
   }
 
 }
 
 
-/* =========================
-   TAB SYSTEM
-========================= */
+/* ================= TABS ================= */
 
-function tab(id){
+function tab(id) {
 
   document
     .querySelectorAll('.admin-section')
-    .forEach(x=>x.classList.add('hidden'));
+    .forEach(function(x) {
+
+      x.classList.add('hidden');
+
+    });
+
 
   const section = $(id);
 
-  if(section){
+  if (section) {
+
     section.classList.remove('hidden');
+
   }
 
-  if(id === 'resources'){
+
+  if (id === 'resources') {
     loadResources();
   }
 
-  if(id === 'notice'){
+  if (id === 'notice') {
     loadNotices();
   }
 
-  if(id === 'lecture'){
+  if (id === 'lecture') {
     loadLectures();
   }
 
-  if(id === 'staff'){
+  if (id === 'staff') {
     loadStaff();
   }
 
-  if(id === 'apps'){
+  if (id === 'apps') {
     loadApps();
   }
 
-  if(id === 'docs'){
+  if (id === 'docs') {
     loadDocs();
   }
 
 }
 
 
-/* =========================
-   LOAD ALL
-========================= */
+/* ================= LOAD ALL ================= */
 
-async function loadAll(){
+async function loadAll() {
 
-  try{
+  try {
 
-    const s = await API.getStats(pin,{});
+    const s =
+      await API.getStats(pin, {});
+
 
     $('students').textContent =
       s.total ||
       s.students ||
       0;
 
-  }catch(e){
 
-    console.error(
-      'Stats Error:',
-      e
-    );
+  } catch (e) {
+
+    $('students').textContent = '—';
 
   }
 
+
   await loadResources();
+
   await loadNotices();
 
 }
 
 
-/* =========================
-   FILE DATA
-========================= */
+/* ================= FILE DATA ================= */
 
-async function fileData(file){
+async function fileData(file) {
 
-  return new Promise((res,rej)=>{
+  return new Promise(function(resolve, reject) {
 
-    const r = new FileReader();
+    const r =
+      new FileReader();
 
-    r.onload = () => {
 
-      res({
-        base64:r.result,
-        mimeType:file.type,
-        fileName:file.name
+    r.onload = function() {
+
+      resolve({
+
+        base64: r.result,
+
+        mimeType: file.type,
+
+        fileName: file.name
+
       });
 
     };
 
-    r.onerror = rej;
+
+    r.onerror = reject;
 
     r.readAsDataURL(file);
 
@@ -685,15 +933,17 @@ async function fileData(file){
 }
 
 
-/* =========================
-   RESOURCES
-========================= */
+/* ================================================= */
+/* ================= RESOURCES ===================== */
+/* ================================================= */
 
-async function uploadResource(){
+async function uploadResource() {
 
-  const f = $('rFile').files[0];
+  const f =
+    $('rFile').files[0];
 
-  if(!f){
+
+  if (!f) {
 
     $('resourceMsg').textContent =
       'Please choose a file.';
@@ -702,78 +952,119 @@ async function uploadResource(){
 
   }
 
-  try{
 
-    const x = await fileData(f);
+  try {
 
-    await API.uploadResource(pin,{
-      ...x,
-      category:$('rCategory').value,
-      Class:$('rClass').value,
-      Medium:$('rMedium').value,
-      bookName:$('rName').value,
-      trade:$('rTrade').value,
-      description:$('rDesc').value
-    });
+    const x =
+      await fileData(f);
+
+
+    await API.uploadResource(
+
+      pin,
+
+      {
+
+        ...x,
+
+        category:
+          $('rCategory').value,
+
+        Class:
+          $('rClass').value,
+
+        Medium:
+          $('rMedium').value,
+
+        bookName:
+          $('rName').value,
+
+        trade:
+          $('rTrade').value,
+
+        description:
+          $('rDesc').value
+
+      }
+
+    );
+
 
     $('resourceMsg').textContent =
       'Uploaded successfully.';
 
+
     await loadResources();
 
-  }catch(e){
+
+  } catch (e) {
 
     $('resourceMsg').textContent =
-      e.message || 'Upload failed.';
+      e.message ||
+      'Upload failed.';
 
   }
 
 }
 
 
-async function loadResources(){
+async function loadResources() {
 
-  try{
+  try {
 
-    const b = await API.getBooks({});
-    const n = await API.getNotes({});
+    const b =
+      await API.getBooks({});
+
+
+    const n =
+      await API.getNotes({});
+
 
     $('books').textContent =
-      Array.isArray(b) ? b.length : 0;
+      b.length;
+
 
     $('notes').textContent =
-      Array.isArray(n) ? n.length : 0;
+      n.length;
 
-    const books = Array.isArray(b)
-      ? b.map(x=>row(x,'Books'))
-      : [];
-
-    const notes = Array.isArray(n)
-      ? n.map(x=>row(x,'Notes'))
-      : [];
 
     $('resourceList').innerHTML =
-      [...books,...notes].join('') ||
+
+      [
+
+        ...b.map(function(x) {
+
+          return row(x, 'Books');
+
+        }),
+
+        ...n.map(function(x) {
+
+          return row(x, 'Notes');
+
+        })
+
+      ].join('')
+
+      ||
+
       'No resources yet.';
 
-  }catch(e){
 
-    console.error(
-      'Resources Error:',
-      e
-    );
+  } catch (e) {
 
     $('resourceList').innerHTML =
-      'Unable to load resources.';
+      '<div class="message error">Unable to load resources.</div>';
 
   }
 
 }
 
 
-function row(x,t){
+function row(x, t) {
 
   return `
+
     <div class="resource-admin-row">
 
       <b>
@@ -790,31 +1081,38 @@ function row(x,t){
       <a
         target="_blank"
         rel="noopener"
-        href="${x['Download URL'] || '#'}"
+        href="${esc(x['Download URL'])}"
       >
         Download
       </a>
 
       <button
         class="btn danger"
-        onclick="delResource('${x.ID}','${t}')"
+        type="button"
+        onclick="delResource('${esc(x.ID)}','${esc(t)}')"
       >
         Delete
       </button>
 
     </div>
+
   `;
 
 }
 
 
-async function delResource(id,t){
+async function delResource(id, t) {
 
-  if(!confirm('Delete this resource?')){
+  if (
+    !confirm(
+      'Delete this resource?'
+    )
+  ) {
     return;
   }
 
-  try{
+
+  try {
 
     await API.deleteResource(
       pin,
@@ -822,13 +1120,15 @@ async function delResource(id,t){
       t
     );
 
+
     await loadResources();
 
-  }catch(e){
+
+  } catch (e) {
 
     alert(
       e.message ||
-      'Unable to delete resource.'
+      'Delete failed.'
     );
 
   }
@@ -836,26 +1136,43 @@ async function delResource(id,t){
 }
 
 
-/* =========================
-   NOTICES
-========================= */
+/* ================================================= */
+/* ================= NOTICES ======================= */
+/* ================================================= */
 
-async function saveNotice(){
+async function saveNotice() {
 
-  try{
+  try {
 
-    await API.saveNotice(pin,{
-      title:$('nTitle').value,
-      message:$('nMessage').value,
-      priority:$('nPriority').value
-    });
+    await API.saveNotice(
+
+      pin,
+
+      {
+
+        title:
+          $('nTitle').value,
+
+        message:
+          $('nMessage').value,
+
+        priority:
+          $('nPriority').value
+
+      }
+
+    );
+
 
     $('nTitle').value = '';
+
     $('nMessage').value = '';
+
 
     await loadNotices();
 
-  }catch(e){
+
+  } catch (e) {
 
     alert(
       e.message ||
@@ -867,75 +1184,81 @@ async function saveNotice(){
 }
 
 
-async function loadNotices(){
+async function loadNotices() {
 
-  try{
+  try {
 
-    const a = await API.getNotices();
+    const a =
+      await API.getNotices();
+
 
     $('notices').textContent =
-      Array.isArray(a)
-        ? a.length
-        : 0;
+      a.length;
+
 
     $('noticeList').innerHTML =
-      (Array.isArray(a) ? a : [])
-      .map(x=>`
 
-        <div class="resource-admin-row">
+      a.map(function(x) {
 
-          <b>
-            ${esc(x.Title)}
-          </b>
+        return `
 
-          <span>
-            ${esc(x.Message)}
-          </span>
+          <div class="resource-admin-row">
 
-          <button
-            class="btn danger"
-            onclick="delNotice('${x.ID}')"
-          >
-            Delete
-          </button>
+            <b>
+              ${esc(x.Title)}
+            </b>
 
-        </div>
+            <span>
+              ${esc(x.Message)}
+            </span>
 
-      `)
-      .join('') ||
+            <button
+              class="btn danger"
+              type="button"
+              onclick="delNotice('${esc(x.ID)}')"
+            >
+              Delete
+            </button>
+
+          </div>
+
+        `;
+
+      }).join('')
+
+      ||
+
       'No notices.';
 
-  }catch(e){
 
-    console.error(
-      'Notice Error:',
-      e
-    );
+  } catch (e) {
 
     $('noticeList').innerHTML =
-      'Unable to load notices.';
+      '<div class="message error">Unable to load notices.</div>';
 
   }
 
 }
 
 
-async function delNotice(id){
+async function delNotice(id) {
 
-  try{
+  try {
 
     await API.deleteNotice(
       pin,
       id
     );
 
+
     await loadNotices();
 
-  }catch(e){
+
+  } catch (e) {
 
     alert(
       e.message ||
-      'Unable to delete notice.'
+      'Delete failed.'
     );
 
   }
@@ -943,25 +1266,44 @@ async function delNotice(id){
 }
 
 
-/* =========================
-   GUEST LECTURES
-========================= */
+/* ================================================= */
+/* ================ GUEST LECTURES ================ */
+/* ================================================= */
 
-async function saveLecture(){
+async function saveLecture() {
 
-  try{
+  try {
 
-    await API.saveGuestLecture(pin,{
-      month:$('gMonth').value,
-      topic:$('gTopic').value,
-      speaker:$('gSpeaker').value,
-      date:$('gDate').value,
-      status:$('gStatus').value
-    });
+    await API.saveGuestLecture(
+
+      pin,
+
+      {
+
+        month:
+          $('gMonth').value,
+
+        topic:
+          $('gTopic').value,
+
+        speaker:
+          $('gSpeaker').value,
+
+        date:
+          $('gDate').value,
+
+        status:
+          $('gStatus').value
+
+      }
+
+    );
+
 
     await loadLectures();
 
-  }catch(e){
+
+  } catch (e) {
 
     alert(
       e.message ||
@@ -973,77 +1315,83 @@ async function saveLecture(){
 }
 
 
-async function loadLectures(){
+async function loadLectures() {
 
-  try{
+  try {
 
     const a =
       await API.getGuestLectures(pin);
 
+
     $('lectureList').innerHTML =
-      (Array.isArray(a) ? a : [])
-      .map(x=>`
 
-        <div class="resource-admin-row">
+      a.map(function(x) {
 
-          <b>
-            ${esc(x.Topic)}
-          </b>
+        return `
 
-          <span>
-            ${esc(x.Month)}
-            •
-            ${esc(x.Speaker)}
-            •
-            ${esc(x.Date)}
-            •
-            ${esc(x.Status)}
-          </span>
+          <div class="resource-admin-row">
 
-          <button
-            class="btn danger"
-            onclick="delLecture('${x.ID}')"
-          >
-            Delete
-          </button>
+            <b>
+              ${esc(x.Topic)}
+            </b>
 
-        </div>
+            <span>
+              ${esc(x.Month)}
+              •
+              ${esc(x.Speaker)}
+              •
+              ${esc(x.Date)}
+              •
+              ${esc(x.Status)}
+            </span>
 
-      `)
-      .join('') ||
+            <button
+              class="btn danger"
+              type="button"
+              onclick="delLecture('${esc(x.ID)}')"
+            >
+              Delete
+            </button>
+
+          </div>
+
+        `;
+
+      }).join('')
+
+      ||
+
       'No guest lectures.';
 
-  }catch(e){
 
-    console.error(
-      'Guest Lecture Error:',
-      e
-    );
+  } catch (e) {
 
     $('lectureList').innerHTML =
-      'Unable to load guest lectures.';
+      '<div class="message error">Unable to load guest lectures.</div>';
 
   }
 
 }
 
 
-async function delLecture(id){
+async function delLecture(id) {
 
-  try{
+  try {
 
     await API.deleteGuestLecture(
       pin,
       id
     );
 
+
     await loadLectures();
 
-  }catch(e){
+
+  } catch (e) {
 
     alert(
       e.message ||
-      'Unable to delete guest lecture.'
+      'Delete failed.'
     );
 
   }
@@ -1051,25 +1399,44 @@ async function delLecture(id){
 }
 
 
-/* =========================
-   STAFF
-========================= */
+/* ================================================= */
+/* ================= STAFF ========================= */
+/* ================================================= */
 
-async function saveStaff(){
+async function saveStaff() {
 
-  try{
+  try {
 
-    await API.saveStaff(pin,{
-      name:$('sName').value,
-      role:$('sRole').value,
-      department:$('sDept').value,
-      mobile:$('sMobile').value,
-      email:$('sEmail').value
-    });
+    await API.saveStaff(
+
+      pin,
+
+      {
+
+        name:
+          $('sName').value,
+
+        role:
+          $('sRole').value,
+
+        department:
+          $('sDept').value,
+
+        mobile:
+          $('sMobile').value,
+
+        email:
+          $('sEmail').value
+
+      }
+
+    );
+
 
     await loadStaff();
 
-  }catch(e){
+
+  } catch (e) {
 
     alert(
       e.message ||
@@ -1081,75 +1448,81 @@ async function saveStaff(){
 }
 
 
-async function loadStaff(){
+async function loadStaff() {
 
-  try{
+  try {
 
     const a =
       await API.getStaff(pin);
 
+
     $('staffList').innerHTML =
-      (Array.isArray(a) ? a : [])
-      .map(x=>`
 
-        <div class="resource-admin-row">
+      a.map(function(x) {
 
-          <b>
-            ${esc(x.Name)}
-          </b>
+        return `
 
-          <span>
-            ${esc(x.Role)}
-            •
-            ${esc(x.Department)}
-            •
-            ${esc(x.Mobile)}
-          </span>
+          <div class="resource-admin-row">
 
-          <button
-            class="btn danger"
-            onclick="delStaff('${x.ID}')"
-          >
-            Delete
-          </button>
+            <b>
+              ${esc(x.Name)}
+            </b>
 
-        </div>
+            <span>
+              ${esc(x.Role)}
+              •
+              ${esc(x.Department)}
+              •
+              ${esc(x.Mobile)}
+            </span>
 
-      `)
-      .join('') ||
+            <button
+              class="btn danger"
+              type="button"
+              onclick="delStaff('${esc(x.ID)}')"
+            >
+              Delete
+            </button>
+
+          </div>
+
+        `;
+
+      }).join('')
+
+      ||
+
       'No staff records.';
 
-  }catch(e){
 
-    console.error(
-      'Staff Error:',
-      e
-    );
+  } catch (e) {
 
     $('staffList').innerHTML =
-      'Unable to load staff records.';
+      '<div class="message error">Unable to load staff records.</div>';
 
   }
 
 }
 
 
-async function delStaff(id){
+async function delStaff(id) {
 
-  try{
+  try {
 
     await API.deleteStaff(
       pin,
       id
     );
 
+
     await loadStaff();
 
-  }catch(e){
+
+  } catch (e) {
 
     alert(
       e.message ||
-      'Unable to delete staff.'
+      'Delete failed.'
     );
 
   }
@@ -1157,95 +1530,121 @@ async function delStaff(id){
 }
 
 
-/* =========================
-   APPLICATIONS
-========================= */
+/* ================================================= */
+/* ================ APPLICATIONS =================== */
+/* ================================================= */
 
-async function loadApps(){
+async function loadApps() {
 
-  try{
+  try {
 
     const a =
       await API.getApplications(pin);
 
+
     $('appsList').innerHTML =
-      (Array.isArray(a) ? a : [])
-      .map(x=>`
 
-        <div class="resource-admin-row">
+      a.map(function(x) {
 
-          <b>
-            ${esc(x.Type)}
-          </b>
+        return `
 
-          <span>
-            ${esc(x.Applicant)}
-            •
-            ${esc(x.Class)}
-            •
-            ${esc(x.Mobile)}
-            •
-            ${esc(x.Status)}
-          </span>
+          <div class="resource-admin-row">
 
-        </div>
+            <b>
+              ${esc(x.Type)}
+            </b>
 
-      `)
-      .join('') ||
+            <span>
+              ${esc(x.Applicant)}
+              •
+              ${esc(x.Class)}
+              •
+              ${esc(x.Mobile)}
+              •
+              ${esc(x.Status)}
+            </span>
+
+          </div>
+
+        `;
+
+      }).join('')
+
+      ||
+
       'No applications found.';
 
-  }catch(e){
 
-    console.error(
-      'Applications Error:',
-      e
-    );
+  } catch (e) {
 
     $('appsList').innerHTML =
-      'Unable to load applications.';
+      '<div class="message error">Unable to load applications.</div>';
 
   }
 
 }
 
 
-/* =========================
-   DOCUMENTS
-========================= */
+/* ================================================= */
+/* ================= DOCUMENTS ===================== */
+/* ================================================= */
 
-async function uploadDoc(){
+async function uploadDoc() {
 
   const f =
     $('dFile').files[0];
 
-  if(!f){
 
-    alert('Please choose a file.');
+  if (!f) {
+
+    alert(
+      'Please choose a document.'
+    );
 
     return;
 
   }
 
-  try{
+
+  try {
 
     const x =
       await fileData(f);
 
-    await API.uploadDocument(pin,{
-      ...x,
-      type:$('dType').value,
-      title:$('dTitle').value,
-      Class:$('dClass').value,
-      Medium:$('dMedium').value
-    });
+
+    await API.uploadDocument(
+
+      pin,
+
+      {
+
+        ...x,
+
+        type:
+          $('dType').value,
+
+        title:
+          $('dTitle').value,
+
+        Class:
+          $('dClass').value,
+
+        Medium:
+          $('dMedium').value
+
+      }
+
+    );
+
 
     await loadDocs();
 
-  }catch(e){
+
+  } catch (e) {
 
     alert(
       e.message ||
-      'Unable to upload document.'
+      'Document upload failed.'
     );
 
   }
@@ -1253,65 +1652,68 @@ async function uploadDoc(){
 }
 
 
-async function loadDocs(){
+async function loadDocs() {
 
-  try{
+  try {
 
     const a =
       await API.getDocuments(pin);
 
+
     $('docsList').innerHTML =
-      (Array.isArray(a) ? a : [])
-      .map(x=>`
 
-        <div class="resource-admin-row">
+      a.map(function(x) {
 
-          <b>
-            ${esc(x.Title)}
-          </b>
+        return `
 
-          <span>
-            ${esc(x.Type)}
-            •
-            ${esc(x.Class)}
-            •
-            ${esc(x.Medium)}
-          </span>
+          <div class="resource-admin-row">
 
-          <a
-            target="_blank"
-            rel="noopener"
-            href="${x['Download URL'] || '#'}"
-          >
-            Download
-          </a>
+            <b>
+              ${esc(x.Title)}
+            </b>
 
-        </div>
+            <span>
+              ${esc(x.Type)}
+              •
+              ${esc(x.Class)}
+              •
+              ${esc(x.Medium)}
+            </span>
 
-      `)
-      .join('') ||
+            <a
+              target="_blank"
+              rel="noopener"
+              href="${esc(x['Download URL'])}"
+            >
+              Download
+            </a>
+
+          </div>
+
+        `;
+
+      }).join('')
+
+      ||
+
       'No documents.';
 
-  }catch(e){
 
-    console.error(
-      'Documents Error:',
-      e
-    );
+  } catch (e) {
 
     $('docsList').innerHTML =
-      'Unable to load documents.';
+      '<div class="message error">Unable to load documents.</div>';
 
   }
 
 }
 
 
-/* =========================
-   CERTIFICATE
-========================= */
+/* ================================================= */
+/* ============== CERTIFICATE ====================== */
+/* ================================================= */
 
-function printCertificate(){
+function printCertificate() {
 
   const n =
     esc($('cName').value);
@@ -1328,27 +1730,35 @@ function printCertificate(){
   const topic =
     esc($('cTopic').value);
 
+
   const w =
     window.open(
       '',
       '_blank'
     );
 
-  if(!w){
+
+  if (!w) {
 
     alert(
-      'Please allow pop-ups for certificate printing.'
+      'Please allow pop-ups for this website.'
     );
 
     return;
 
   }
 
+
   w.document.write(`
+
 <!doctype html>
+
 <html>
+
 <head>
+
 <meta charset="utf-8">
+
 <title>${t}</title>
 
 <style>
@@ -1388,39 +1798,51 @@ p{
 
 <h1>${t}</h1>
 
-<p>This certificate is presented to</p>
+<p>
+This certificate is presented to
+</p>
 
 <h2>${n}</h2>
 
-<p>Class: ${cl}</p>
+<p>
+Class: ${cl}
+</p>
 
 <p>
 for participation in
 <b>${topic}</b>.
 </p>
 
-<p>Date: ${d}</p>
+<p>
+Date: ${d}
+</p>
 
 <br>
 
 <p>
-________________________<br>
+________________________
+<br>
 Authorized Signatory
 </p>
 
 </div>
 
-<script>
-window.onload=function(){
-  window.print();
-};
-<\/script>
-
 </body>
+
 </html>
+
   `);
 
+
   w.document.close();
+
+
+  setTimeout(
+    function() {
+      w.print();
+    },
+    500
+  );
 
 }
 
