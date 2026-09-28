@@ -4,43 +4,13 @@ const API = (() => {
   const getUrl = () => localStorage.getItem('sandipani_api_url') || defaultUrl;
 
   async function call(action, data = {}) {
-  if (!url) throw new Error('Google Apps Script URL is not configured.');
-
-  const params = new URLSearchParams();
-  params.set('action', action);
-
-  Object.keys(data || {}).forEach(key => {
-    const value = data[key];
-    if (value === undefined || value === null) return;
-
-    if (typeof value === 'object') {
-      params.set(key, JSON.stringify(value));
-    } else {
-      params.set(key, String(value));
-    }
-  });
-
-  const res = await fetch(url + '?' + params.toString(), {
-    method: 'GET'
-  });
-
-  const text = await res.text();
-
-  let out;
-  try {
-    out = JSON.parse(text);
-  } catch(e) {
-    throw new Error('Invalid response from Google Apps Script.');
-  }
-
-  if (out && out.ok === false) {
-    throw new Error(out.error || 'Request failed.');
-  }
-
-  return Object.prototype.hasOwnProperty.call(out, 'data')
-    ? out.data
-    : out;
-}
+    const url=getUrl();
+    if (!url) throw new Error('Google Apps Script URL is not configured.');
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({action, ...data})
+    });
     const text = await res.text();
     let out;
     try { out = JSON.parse(text); }
