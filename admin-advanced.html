@@ -755,68 +755,61 @@ function esc(v) {
 /* ================= LOGIN ================= */
 
 async function login() {
-
   const enteredPin = $('pin').value.trim();
 
   if (!enteredPin) {
-
-    $('msg').textContent =
-      'Please enter Admin PIN.';
-
+    $('msg').textContent = 'Please enter Admin PIN.';
+    $('msg').className = 'message error';
     return;
   }
 
+  // Immediately show loading message
+  $('msg').textContent = 'Verifying PIN... Please wait.';
+  $('msg').className = 'message info';
 
-  $('msg').textContent =
-    'Verifying PIN...';
+  // Prevent double click
+  const btn = document.querySelector('#login + button') || document.querySelector('button[onclick="login()"]');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Verifying...';
+  }
 
+  // Give browser time to render the message
+  await new Promise(resolve => setTimeout(resolve, 150));
 
   try {
-
-    const result =
-      await API.verifyAdmin(enteredPin);
-
+    const result = await API.verifyAdmin(enteredPin);
 
     if (!result || result.valid !== true) {
-
-      $('msg').textContent =
-        'Invalid Admin PIN.';
-
-      return;
+      throw new Error('Invalid Admin PIN');
     }
 
+    $('msg').textContent = 'Login successful. Loading Command Center...';
+    $('msg').className = 'message success';
 
     pin = enteredPin;
 
+    // Small delay so success message is visible
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     $('login').classList.add('hidden');
-
     $('panel').classList.remove('hidden');
-
-    $('msg').textContent = '';
-
 
     await loadAll();
 
-
   } catch (e) {
-
-    console.error(
-      'Command Center Login Error:',
-      e
-    );
-
+    console.error('Command Center Login Error:', e);
 
     $('msg').textContent =
-      'Login failed: ' +
-      (
-        e && e.message
-          ? e.message
-          : 'Unable to connect.'
-      );
+      'Login failed: ' + (e.message || 'Unable to connect to server.');
 
+    $('msg').className = 'message error';
+
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Login';
+    }
   }
-
 }
 
 
