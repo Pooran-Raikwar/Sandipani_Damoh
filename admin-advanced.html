@@ -28,7 +28,36 @@ async function login() {
       throw new Error('Invalid Admin PIN');
     }
 
+    $('login').classList.add('hiasync function login() {
+  const enteredPin = $('pin').value.trim();
+
+  if (!enteredPin) {
+    $('msg').textContent = 'Please enter Admin PIN.';
+    return;
+  }
+
+  $('msg').textContent = 'Verifying PIN...';
+
+  try {
+    const result = await API.verifyAdmin(enteredPin);
+
+    if (!result || result.valid !== true) {
+      $('msg').textContent = 'Invalid Admin PIN.';
+      return;
+    }
+
+    pin = enteredPin;
     $('login').classList.add('hidden');
+    $('panel').classList.remove('hidden');
+    $('msg').textContent = '';
+
+    await loadAll();
+
+  } catch (e) {
+    $('msg').textContent =
+      'Login failed: ' + (e && e.message ? e.message : 'Unable to connect.');
+  }
+}dden');
     $('panel').classList.remove('hidden');
     $('msg').textContent = '';
 
@@ -58,4 +87,60 @@ async function delStaff(id){await API.deleteStaff(pin,id);loadStaff();}
 async function loadApps(){const a=await API.getApplications(pin);$('appsList').innerHTML=a.map(x=>`<div class="resource-admin-row"><b>${esc(x.Type)}</b><span>${esc(x.Applicant)} • ${esc(x.Class)} • ${esc(x.Mobile)} • ${esc(x.Status)}</span></div>`).join('')||'No applications found.';}
 async function uploadDoc(){const f=$('dFile').files[0];if(!f)return;const x=await fileData(f);await API.uploadDocument(pin,{...x,type:$('dType').value,title:$('dTitle').value,Class:$('dClass').value,Medium:$('dMedium').value});loadDocs();}
 async function loadDocs(){const a=await API.getDocuments(pin);$('docsList').innerHTML=a.map(x=>`<div class="resource-admin-row"><b>${esc(x.Title)}</b><span>${esc(x.Type)} • ${esc(x.Class)} • ${esc(x.Medium)}</span><a target="_blank" href="${x['Download URL']}">Download</a></div>`).join('')||'No documents.';}
-function printCertificate(){const n=esc($('cName').value),cl=esc($('cClass').value),t=esc($('cTitle').value),d=esc($('cDate').value),topic=esc($('cTopic').value);const w=window.open('','_blank');w.document.write(`<html><head><style>body{font-family:Georgia,serif;padding:60px;text-align:center}.cert{border:12px double #1769d1;padding:70px 50px;min-height:520px}h1{font-size:38px}h2{font-size:26px}p{font-size:19px;line-height:1.8}</style></head><body><div class="cert"><h1>${t}</h1><p>This certificate is presented to</p><h2>${n}</h2><p>Class: ${cl}</p><p>for participation in <b>${topic}</b>.</p><p>Date: ${d}</p><br><p>________________________<br>Authorized Signatory</p></div><script>window.print()<\/script></body></html>`);
+function printCertificate(){
+  const n=esc($('cName').value),
+        cl=esc($('cClass').value),
+        t=esc($('cTitle').value),
+        d=esc($('cDate').value),
+        topic=esc($('cTopic').value);
+
+  const w=window.open('','_blank');
+
+  w.document.write(`
+    <html>
+      <head>
+        <style>
+          body{
+            font-family:Georgia,serif;
+            padding:60px;
+            text-align:center
+          }
+          .cert{
+            border:12px double #1769d1;
+            padding:70px 50px;
+            min-height:520px
+          }
+          h1{
+            font-size:38px
+          }
+          h2{
+            font-size:26px
+          }
+          p{
+            font-size:19px;
+            line-height:1.8
+          }
+        </style>
+      </head>
+      <body>
+        <div class="cert">
+          <h1>${t}</h1>
+          <p>This certificate is presented to</p>
+          <h2>${n}</h2>
+          <p>Class: ${cl}</p>
+          <p>for participation in <b>${topic}</b>.</p>
+          <p>Date: ${d}</p>
+          <br>
+          <p>
+            ________________________<br>
+            Authorized Signatory
+          </p>
+        </div>
+        <script>window.print()<\/script>
+      </body>
+    </html>
+  `);
+}
+</script>
+</body>
+</html>
