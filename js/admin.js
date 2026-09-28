@@ -3,7 +3,22 @@ const $=id=>document.getElementById(id);
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
 function msg(t,type='info'){const e=$('adminMessage');e.textContent=t;e.className='message '+type;e.style.display='block';}
 async function adminLogin(){const pin=$('adminPin').value.trim();if(!pin)return msg('Enter Admin PIN.','error');try{const r=await API.verifyAdmin(pin);if(!r.valid)return msg('Invalid Admin PIN.','error');adminPin=pin;$('loginCard').classList.add('hidden');$('connectionCard')?.classList.remove('hidden');$('adminPanel').classList.remove('hidden');$('apiUrl').value=localStorage.getItem('sandipani_api_url')||DEFAULT_API_URL;try{const c=await API.getConnectionInfo(pin);$('sheetRef').value=c.sheetUrl||'';}catch(e){}await refreshAll();msg('Admin login successful. Connection settings unlocked.','success');}catch(e){msg(e.message,'error');}}
-function logout(){adminPin='';$('adminPanel').classList.add('hidden');$('connectionCard')?.classList.add('hidden');$('loginCard').classList.remove('hidden');}
+function logout(){
+  adminPin='';
+  $('adminPanel').classList.add('hidden');
+  $('connectionCard')?.classList.add('hidden');
+  $('loginCard').classList.remove('hidden');
+
+  // Clear login message after logout
+  const m=$('adminMessage');
+  if(m){
+    m.textContent='';
+    m.style.display='none';
+  }
+
+  // Clear PIN field
+  if($('adminPin')) $('adminPin').value='';
+}
 function filters(){return { 'Academic Year':$('fYear').value,'Class':$('fClass').value,'Section':$('fSection').value,'Gender':$('fGender').value,'Stream':$('fStream').value,'IT Subject in Place of This Language':$('fIT').value,search:$('studentSearch').value.trim()};}
 async function refreshAll(){await Promise.all([loadDashboard(),loadStudents(),loadSettings(),loadConfig(),loadGalleryAdmin()]);}
 async function loadDashboard(){const s=await API.getStats(adminPin,filters());$('statStudents').textContent=s.total;$('c9').textContent=s.classes['9th'];$('c10').textContent=s.classes['10th'];$('c11').textContent=s.classes['11th'];$('c12').textContent=s.classes['12th'];$('gMale').textContent=s.gender.Male;$('gFemale').textContent=s.gender.Female;$('gOther').textContent=s.gender.Other;$('itHindi').textContent=s.it.Hindi;$('itEnglish').textContent=s.it.English;$('itBoth').textContent=s.it['Hindi & English'];$('aHindi').textContent=s.additional.Hindi;$('aEnglish').textContent=s.additional.English;$('aMath').textContent=s.additional.Mathematics;$('aBio').textContent=s.additional.Biology;$('aSkipHindi').textContent=s.additional['Completely Skipped Hindi'];$('aSkipEnglish').textContent=s.additional['Completely Skipped English'];$('sMath').textContent=s.stream.Mathematics;$('sBio').textContent=s.stream.Biology;$('sArts').textContent=s.stream.Arts;$('sCommerce').textContent=s.stream.Commerce;$('jDDEO').textContent=s.jobRole['Domestic Data Entry Operator'];$('jWeb').textContent=s.jobRole['Web Developer'];$('statDeleted').textContent=s.meta.deleted;$('statFields').textContent=s.meta.fields;}
