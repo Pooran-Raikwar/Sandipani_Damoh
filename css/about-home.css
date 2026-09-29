@@ -1,352 +1,238 @@
 /* =========================================================
-   ABOUT PAGE — HOME STYLE
-   Only About page styling. No backend/API changes.
-   ========================================================= */
-
-.about-page {
-  position: relative;
-  overflow: hidden;
-  padding: 40px 0 80px;
-}
-
-/* Ambient background */
-.about-page::before,
-.about-page::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  border-radius: 50%;
-  filter: blur(70px);
-  opacity: .25;
-  z-index: 0;
-}
-
-.about-page::before {
-  width: 320px;
-  height: 320px;
-  top: 40px;
-  left: -140px;
-  background: #6c63ff;
-}
-
-.about-page::after {
-  width: 360px;
-  height: 360px;
-  right: -160px;
-  top: 420px;
-  background: #00bcd4;
-}
-
-.about-page > * {
-  position: relative;
-  z-index: 1;
-}
-
-/* Hero */
-.about-page .about-hero,
-.about-page .hero-modern {
-  margin-bottom: 35px;
-}
-
-.about-page .hero-content {
-  position: relative;
-}
-
-.about-page .eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.14);
-  backdrop-filter: blur(12px);
-}
-
-/* Profile card */
-.about-page .about-profile-card {
-  border-radius: 28px;
-  padding: 28px;
-  background: linear-gradient(
-    145deg,
-    rgba(255,255,255,.12),
-    rgba(255,255,255,.045)
-  );
-  border: 5px solid #1677ff;
-  box-shadow:
-    0 25px 70px rgba(0,0,0,.22),
-    0 0 22px rgba(22,119,255,.28);
-  backdrop-filter: blur(18px);
-  transition: transform .3s ease, box-shadow .3s ease;
-}
-
-.about-page .about-profile-card:hover {
-  transform: translateY(-5px);
-  box-shadow:
-    0 32px 85px rgba(0,0,0,.28),
-    0 0 28px rgba(22,119,255,.35);
-}
-
-.about-page .profile-photo {
-  border-radius: 22px;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,.16);
-  box-shadow: 0 15px 45px rgba(0,0,0,.22);
-}
-
-.about-page .profile-photo img {
-  width: 100%;
-  display: block;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-}
-
-/* Section headings */
-.about-page .section-head {
-  margin-bottom: 25px;
-}
-
-.about-page .section-kicker {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  opacity: .7;
-}
-
-.about-page h2 {
-  margin: 7px 0 0;
-  font-size: clamp(28px, 4vw, 46px);
-  line-height: 1.08;
-  letter-spacing: -.035em;
-}
-
-/* Experience cards */
-.about-page .experience-card,
-.about-page .feature-card {
-  position: relative;
-  border-radius: 24px;
-  padding: 25px;
-  background: linear-gradient(
-    145deg,
-    rgba(255,255,255,.10),
-    rgba(255,255,255,.035)
-  );
-  border: 1px solid rgba(255,255,255,.13);
-  backdrop-filter: blur(15px);
-  box-shadow: 0 18px 50px rgba(0,0,0,.16);
-  transition: transform .3s ease, border-color .3s ease;
-}
-
-.about-page .experience-card:hover,
-.about-page .feature-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(255,255,255,.28);
-}
-
-.about-page .experience-card h3,
-.about-page .feature-card h3 {
-  margin-top: 0;
-}
-
-/* Experience strip */
-.about-page .experience-strip {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin: 25px 0 55px;
-}
-
-.about-page .experience-strip > * {
-  padding: 22px;
-  border-radius: 20px;
-  background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.12);
-  backdrop-filter: blur(14px);
-}
-
-/* Education timeline */
-.about-page .education-item,
-.about-page .timeline-item {
-  position: relative;
-  padding: 24px 25px;
-  margin-bottom: 16px;
-  border-radius: 20px;
-  background: rgba(255,255,255,.065);
-  border: 1px solid rgba(255,255,255,.11);
-  backdrop-filter: blur(12px);
-  transition: transform .25s ease;
-}
-
-.about-page .education-item:hover,
-.about-page .timeline-item:hover {
-  transform: translateX(5px);
-}
-
-/* Skills */
-.about-page .skill,
-.about-page .skill-tag,
-.about-page .tech-item {
-  display: inline-flex;
-  align-items: center;
-  padding: 9px 14px;
-  margin: 5px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-  background: rgba(255,255,255,.075);
-  border: 1px solid rgba(255,255,255,.12);
-  backdrop-filter: blur(10px);
-}
-
-/* Project section */
-.about-page .project-card {
-  border-radius: 25px;
-  padding: 28px;
-  background: linear-gradient(
-    145deg,
-    rgba(255,255,255,.105),
-    rgba(255,255,255,.035)
-  );
-  border: 1px solid rgba(255,255,255,.13);
-  box-shadow: 0 20px 60px rgba(0,0,0,.18);
-}
-
-/* Closing section */
-.about-page .about-closing,
-.about-page .closing-section {
-  margin-top: 55px;
-  padding: 45px 30px;
-  text-align: center;
-  border-radius: 30px;
-  background:
-    radial-gradient(circle at top left,
-      rgba(108,99,255,.18),
-      transparent 45%),
-    linear-gradient(
-      145deg,
-      rgba(255,255,255,.10),
-      rgba(255,255,255,.035)
-    );
-  border: 1px solid rgba(255,255,255,.14);
-  backdrop-filter: blur(16px);
-}
-
-.about-page .about-closing h2,
-.about-page .closing-section h2 {
-  max-width: 800px;
-  margin: auto;
-}
-
-/* Buttons */
-.about-page .btn {
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-
-.about-page .btn:hover {
-  transform: translateY(-2px);
-}
-
-
-/* =========================================================
-   HERO PHOTO + FLOATING PROFILE CARD
+   ABOUT HERO — CLEAN PROFILE LAYOUT
    ========================================================= */
 
 .about-page .hero-visual {
   position: relative;
-  min-height: 600px;
+  min-height: 560px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 55px;
+  padding: 45px 20px 55px;
+}
+
+/* Ambient orbs */
+.about-page .hero-visual .orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(65px);
+  opacity: .22;
+}
+
+.about-page .hero-visual .orb-one {
+  width: 230px;
+  height: 230px;
+  background: #1677ff;
+  top: 20px;
+  right: 15%;
+}
+
+.about-page .hero-visual .orb-two {
+  width: 190px;
+  height: 190px;
+  background: #00bcd4;
+  bottom: 10px;
+  left: 12%;
 }
 
 
-/* Large rectangular hero photo */
+/* =========================================================
+   LARGE PHOTO
+   ========================================================= */
+
 .about-page .hero-photo-card {
-  position: absolute;
-  top: 45px;
-  right: 10%;
+  position: relative;
+  z-index: 2;
+
   width: 300px;
   height: 390px;
-  overflow: hidden;
-  border-radius: 26px;
 
-  /* THICK BLUE BORDER */
+  flex: 0 0 300px;
+
+  overflow: hidden;
+  border-radius: 28px;
+
   border: 5px solid #1677ff;
 
-  background: rgba(255,255,255,.06);
+  background: #101827;
 
   box-shadow:
-    0 25px 60px rgba(0,0,0,.25),
-    0 0 25px rgba(22,119,255,.30);
-
-  backdrop-filter: blur(12px);
-  z-index: 1;
+    0 25px 60px rgba(0,0,0,.28),
+    0 0 25px rgba(22,119,255,.25);
 }
 
-
-/* Hero photo */
 .about-page .hero-photo-card img {
   width: 100%;
   height: 100%;
+
   display: block;
+
   object-fit: cover;
+  object-position: center;
+
+  border-radius: 22px;
 }
 
-
-/* Dark gradient over hero photo */
-.about-page .hero-photo-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 45%,
-    rgba(0,0,0,.72) 100%
-  );
-  pointer-events: none;
-}
-
-
-/* Hero photo name */
 .about-page .hero-photo-overlay {
   position: absolute;
-  left: 24px;
-  right: 24px;
-  bottom: 24px;
-  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  padding: 30px 20px 20px;
+
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,.85),
+    rgba(0,0,0,.35),
+    transparent
+  );
+
   color: #fff;
 }
 
 .about-page .hero-photo-overlay span {
   display: block;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
-  letter-spacing: .04em;
+  letter-spacing: .05em;
 }
 
 .about-page .hero-photo-overlay small {
   display: block;
   margin-top: 5px;
   font-size: 11px;
-  letter-spacing: .12em;
-  opacity: .82;
+  opacity: .85;
 }
 
 
-/* Floating profile card position */
+/* =========================================================
+   PROFILE CARD
+   ========================================================= */
+
 .about-page .about-profile-card {
   position: relative;
   z-index: 3;
 
-  /* Card thoda neeche */
-  margin-top: 145px;
+  width: 310px;
+  flex: 0 0 310px;
 
-  /* Photo card se slight overlap */
-  margin-right: -45px;
+  margin: 90px 0 0 0;
+
+  padding: 25px;
+
+  border-radius: 28px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,.13),
+    rgba(255,255,255,.045)
+  );
+
+  border: 5px solid #1677ff;
+
+  box-shadow:
+    0 25px 70px rgba(0,0,0,.25),
+    0 0 25px rgba(22,119,255,.25);
+
+  backdrop-filter: blur(18px);
+}
+
+
+/* Profile card top */
+.about-page .about-profile-card .campus-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin-bottom: 20px;
+}
+
+
+/* Profile photo */
+.about-page .about-profile-photo {
+  width: 125px;
+  height: 125px;
+
+  margin: 0 auto 20px;
+
+  border-radius: 24px;
+  overflow: hidden;
+
+  background: #fff;
+
+  border: 4px solid rgba(255,255,255,.9);
+
+  box-shadow:
+    0 12px 35px rgba(0,0,0,.25);
+}
+
+.about-page .about-profile-photo img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+  object-position: center;
+}
+
+
+/* Hide PR fallback while real photo is available */
+.about-page .photo-fallback {
+  display: none !important;
+}
+
+
+/* Profile name */
+.about-page .about-profile-card h3 {
+  text-align: center;
+  margin: 8px 0 6px;
+
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+
+/* Profile description */
+.about-page .about-profile-card > p {
+  text-align: center;
+  line-height: 1.55;
+  margin: 0 auto 20px;
+}
+
+
+/* Mini stats */
+.about-page .about-profile-card .mini-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.about-page .about-profile-card .mini-stats > div {
+  padding: 13px 7px;
+
+  text-align: center;
+
+  border-radius: 14px;
+
+  background: rgba(22,119,255,.12);
+  border: 1px solid rgba(22,119,255,.28);
+}
+
+.about-page .about-profile-card .mini-stats b {
+  display: block;
+  font-size: 17px;
+}
+
+.about-page .about-profile-card .mini-stats small {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  opacity: .75;
 }
 
 
@@ -354,43 +240,31 @@
    TABLET
    ========================================================= */
 
-@media (max-width: 820px) {
-
-  .about-page {
-    padding-top: 25px;
-  }
-
-  .about-page .experience-strip {
-    grid-template-columns: 1fr;
-  }
-
-  .about-page .about-profile-card {
-    padding: 20px;
-  }
-
-  .about-page h2 {
-    font-size: 32px;
-  }
-
+@media (max-width: 900px) {
 
   .about-page .hero-visual {
-    min-height: 650px;
-  }
+    min-height: auto;
 
+    flex-direction: column;
+
+    gap: 25px;
+
+    padding-top: 30px;
+  }
 
   .about-page .hero-photo-card {
     width: 280px;
     height: 360px;
-    right: 8%;
-    top: 20px;
-  }
 
+    flex-basis: 360px;
+  }
 
   .about-page .about-profile-card {
-    margin-top: 175px;
-    margin-right: 0;
-  }
+    width: min(310px, 90%);
+    flex-basis: auto;
 
+    margin: -15px 0 0;
+  }
 }
 
 
@@ -400,46 +274,46 @@
 
 @media (max-width: 600px) {
 
-  .about-page {
-    padding: 20px 0 55px;
-  }
-
-  .about-page .experience-card,
-  .about-page .feature-card,
-  .about-page .project-card {
-    padding: 20px;
-  }
-
-  .about-page .about-closing,
-  .about-page .closing-section {
-    padding: 32px 20px;
-    border-radius: 22px;
-  }
-
-
   .about-page .hero-visual {
-    min-height: 620px;
+    padding: 20px 15px 45px;
+    gap: 20px;
   }
-
 
   .about-page .hero-photo-card {
-    width: 250px;
-    height: 330px;
-    right: 50%;
-    transform: translateX(50%);
-    top: 10px;
-  }
+    width: min(280px, 88vw);
+    height: 350px;
 
+    flex: none;
+  }
 
   .about-page .about-profile-card {
-    margin-top: 170px;
-    margin-right: 0;
-    width: 88%;
+    width: min(330px, 92vw);
+
+    margin: 0;
+
+    padding: 22px;
+
+    border-width: 4px;
   }
 
+  .about-page .about-profile-photo {
+    width: 110px;
+    height: 110px;
+  }
+
+  .about-page .about-profile-card h3 {
+    font-size: 21px;
+  }
+
+  .about-page .about-profile-card .mini-stats {
+    gap: 7px;
+  }
+
+  .about-page .about-profile-card .mini-stats > div {
+    padding: 11px 5px;
+  }
 
   .about-page .hero-photo-overlay span {
-    font-size: 17px;
+    font-size: 16px;
   }
-
 }
