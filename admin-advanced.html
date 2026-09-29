@@ -1173,7 +1173,42 @@ async function delResource(id, t) {
 
 async function saveNotice() {
 
+  const title =
+    $('nTitle').value.trim();
+
+  const message =
+    $('nMessage').value.trim();
+
+  if (!title || !message) {
+
+    $('noticeList').innerHTML =
+      '<div class="message error">Please enter Notice Title and Message.</div>';
+
+    return;
+
+  }
+
+  const btn =
+    document.querySelector(
+      'button[onclick="saveNotice()"]'
+    );
+
   try {
+
+    // Show publishing status
+    $('noticeList').innerHTML =
+      '<div class="message info">⏳ Publishing notice... Please wait.</div>';
+
+    // Prevent double click
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Publishing...';
+    }
+
+    // Give browser time to display message
+    await new Promise(function(resolve) {
+      setTimeout(resolve, 100);
+    });
 
     await API.saveNotice(
 
@@ -1182,10 +1217,10 @@ async function saveNotice() {
       {
 
         title:
-          $('nTitle').value,
+          title,
 
         message:
-          $('nMessage').value,
+          message,
 
         priority:
           $('nPriority').value
@@ -1194,26 +1229,36 @@ async function saveNotice() {
 
     );
 
-
+    // Clear form
     $('nTitle').value = '';
-
     $('nMessage').value = '';
 
+    // Success message
+    $('noticeList').innerHTML =
+      '<div class="message success">✓ Notice published successfully.</div>';
 
     await loadNotices();
 
-
   } catch (e) {
 
-    alert(
-      e.message ||
-      'Unable to save notice.'
-    );
+    console.error('Notice Publish Error:', e);
+
+    $('noticeList').innerHTML =
+      '<div class="message error">✕ Publishing failed: ' +
+      (e.message || 'Please try again.') +
+      '</div>';
+
+  } finally {
+
+    // Enable button again
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Publish Notice';
+    }
 
   }
 
 }
-
 
 async function loadNotices() {
 
