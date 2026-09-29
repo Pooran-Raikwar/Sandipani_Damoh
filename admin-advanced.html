@@ -540,7 +540,7 @@
 
 
 <!-- ================================================= -->
-<!-- ================= APPLICATIONS ================== -->
+<!-- ================ APPLICATIONS =================== -->
 <!-- ================================================= -->
 
 <section
@@ -935,6 +935,7 @@ async function uploadResource() {
   const f =
     $('rFile').files[0];
 
+
   if (!f) {
 
     $('resourceMsg').textContent =
@@ -947,33 +948,42 @@ async function uploadResource() {
 
   }
 
+
   const btn =
     document.querySelector(
       'button[onclick="uploadResource()"]'
     );
 
+
   try {
 
-    // Show uploading status immediately
     $('resourceMsg').textContent =
       '⏳ Uploading file... Please wait.';
 
     $('resourceMsg').className =
       'message info';
 
-    // Prevent double upload
+
     if (btn) {
+
       btn.disabled = true;
-      btn.textContent = '⏳ Uploading...';
+
+      btn.textContent =
+        '⏳ Uploading...';
+
     }
 
-    // Give browser time to display message
+
     await new Promise(function(resolve) {
+
       setTimeout(resolve, 100);
+
     });
+
 
     const x =
       await fileData(f);
+
 
     await API.uploadResource(
 
@@ -1005,39 +1015,52 @@ async function uploadResource() {
 
     );
 
+
     $('resourceMsg').textContent =
       '✓ Resource uploaded successfully.';
 
     $('resourceMsg').className =
       'message success';
 
-    // Clear file after successful upload
+
     $('rFile').value = '';
+
 
     await loadResources();
 
+
   } catch (e) {
 
-    console.error('Resource Upload Error:', e);
+    console.error(
+      'Resource Upload Error:',
+      e
+    );
+
 
     $('resourceMsg').textContent =
       '✕ Upload failed: ' +
-      (e.message || 'Please try again.');
+      (e.message ||
+      'Please try again.');
 
     $('resourceMsg').className =
       'message error';
 
+
   } finally {
 
-    // Enable button again
     if (btn) {
+
       btn.disabled = false;
-      btn.textContent = 'Upload Resource';
+
+      btn.textContent =
+        'Upload Resource';
+
     }
 
   }
 
 }
+
 
 async function loadResources() {
 
@@ -1068,6 +1091,7 @@ async function loadResources() {
           return row(x, 'Books');
 
         }),
+
 
         ...n.map(function(x) {
 
@@ -1179,6 +1203,7 @@ async function saveNotice() {
   const message =
     $('nMessage').value.trim();
 
+
   if (!title || !message) {
 
     $('noticeList').innerHTML =
@@ -1188,27 +1213,35 @@ async function saveNotice() {
 
   }
 
+
   const btn =
     document.querySelector(
       'button[onclick="saveNotice()"]'
     );
 
+
   try {
 
-    // Show publishing status
     $('noticeList').innerHTML =
       '<div class="message info">⏳ Publishing notice... Please wait.</div>';
 
-    // Prevent double click
+
     if (btn) {
+
       btn.disabled = true;
-      btn.textContent = '⏳ Publishing...';
+
+      btn.textContent =
+        '⏳ Publishing...';
+
     }
 
-    // Give browser time to display message
+
     await new Promise(function(resolve) {
+
       setTimeout(resolve, 100);
+
     });
+
 
     await API.saveNotice(
 
@@ -1229,36 +1262,49 @@ async function saveNotice() {
 
     );
 
-    // Clear form
+
     $('nTitle').value = '';
+
     $('nMessage').value = '';
 
-    // Success message
+
     $('noticeList').innerHTML =
       '<div class="message success">✓ Notice published successfully.</div>';
 
+
     await loadNotices();
+
 
   } catch (e) {
 
-    console.error('Notice Publish Error:', e);
+    console.error(
+      'Notice Publish Error:',
+      e
+    );
+
 
     $('noticeList').innerHTML =
       '<div class="message error">✕ Publishing failed: ' +
-      (e.message || 'Please try again.') +
+      (e.message ||
+      'Please try again.') +
       '</div>';
+
 
   } finally {
 
-    // Enable button again
     if (btn) {
+
       btn.disabled = false;
-      btn.textContent = 'Publish Notice';
+
+      btn.textContent =
+        'Publish Notice';
+
     }
 
   }
 
 }
+
 
 async function loadNotices() {
 
@@ -1348,7 +1394,34 @@ async function delNotice(id) {
 
 async function saveLecture() {
 
+  const btn =
+    document.querySelector(
+      'button[onclick="saveLecture()"]'
+    );
+
+
   try {
+
+    $('lectureList').innerHTML =
+      '<div class="message info">⏳ Saving guest lecture... Please wait.</div>';
+
+
+    if (btn) {
+
+      btn.disabled = true;
+
+      btn.textContent =
+        '⏳ Saving...';
+
+    }
+
+
+    await new Promise(function(resolve) {
+
+      setTimeout(resolve, 100);
+
+    });
+
 
     await API.saveGuestLecture(
 
@@ -1376,15 +1449,38 @@ async function saveLecture() {
     );
 
 
+    $('lectureList').innerHTML =
+      '<div class="message success">✓ Guest lecture saved successfully.</div>';
+
+
     await loadLectures();
 
 
   } catch (e) {
 
-    alert(
-      e.message ||
-      'Unable to save guest lecture.'
+    console.error(
+      'Guest Lecture Error:',
+      e
     );
+
+
+    $('lectureList').innerHTML =
+      '<div class="message error">✕ Saving failed: ' +
+      (e.message ||
+      'Please try again.') +
+      '</div>';
+
+
+  } finally {
+
+    if (btn) {
+
+      btn.disabled = false;
+
+      btn.textContent =
+        'Save Guest Lecture';
+
+    }
 
   }
 
@@ -1481,7 +1577,34 @@ async function delLecture(id) {
 
 async function saveStaff() {
 
+  const btn =
+    document.querySelector(
+      'button[onclick="saveStaff()"]'
+    );
+
+
   try {
+
+    $('staffList').innerHTML =
+      '<div class="message info">⏳ Saving staff record... Please wait.</div>';
+
+
+    if (btn) {
+
+      btn.disabled = true;
+
+      btn.textContent =
+        '⏳ Saving...';
+
+    }
+
+
+    await new Promise(function(resolve) {
+
+      setTimeout(resolve, 100);
+
+    });
+
 
     await API.saveStaff(
 
@@ -1509,15 +1632,38 @@ async function saveStaff() {
     );
 
 
+    $('staffList').innerHTML =
+      '<div class="message success">✓ Staff record saved successfully.</div>';
+
+
     await loadStaff();
 
 
   } catch (e) {
 
-    alert(
-      e.message ||
-      'Unable to save staff.'
+    console.error(
+      'Staff Save Error:',
+      e
     );
+
+
+    $('staffList').innerHTML =
+      '<div class="message error">✕ Saving failed: ' +
+      (e.message ||
+      'Please try again.') +
+      '</div>';
+
+
+  } finally {
+
+    if (btn) {
+
+      btn.disabled = false;
+
+      btn.textContent =
+        'Save Staff';
+
+    }
 
   }
 
@@ -1673,16 +1819,42 @@ async function uploadDoc() {
 
   if (!f) {
 
-    alert(
-      'Please choose a document.'
-    );
+    $('docsList').innerHTML =
+      '<div class="message error">Please choose a document.</div>';
 
     return;
 
   }
 
 
+  const btn =
+    document.querySelector(
+      'button[onclick="uploadDoc()"]'
+    );
+
+
   try {
+
+    $('docsList').innerHTML =
+      '<div class="message info">⏳ Uploading document... Please wait.</div>';
+
+
+    if (btn) {
+
+      btn.disabled = true;
+
+      btn.textContent =
+        '⏳ Uploading...';
+
+    }
+
+
+    await new Promise(function(resolve) {
+
+      setTimeout(resolve, 100);
+
+    });
+
 
     const x =
       await fileData(f);
@@ -1713,15 +1885,41 @@ async function uploadDoc() {
     );
 
 
+    $('dFile').value = '';
+
+
+    $('docsList').innerHTML =
+      '<div class="message success">✓ Document uploaded successfully.</div>';
+
+
     await loadDocs();
 
 
   } catch (e) {
 
-    alert(
-      e.message ||
-      'Document upload failed.'
+    console.error(
+      'Document Upload Error:',
+      e
     );
+
+
+    $('docsList').innerHTML =
+      '<div class="message error">✕ Upload failed: ' +
+      (e.message ||
+      'Please try again.') +
+      '</div>';
+
+
+  } finally {
+
+    if (btn) {
+
+      btn.disabled = false;
+
+      btn.textContent =
+        'Upload Document';
+
+    }
 
   }
 
@@ -1791,6 +1989,21 @@ async function loadDocs() {
 
 function printCertificate() {
 
+  const btn =
+    document.querySelector(
+      'button[onclick="printCertificate()"]'
+    );
+
+  if (btn) {
+
+    btn.disabled = true;
+
+    btn.textContent =
+      '⏳ Generating...';
+
+  }
+
+
   const n =
     esc($('cName').value);
 
@@ -1815,6 +2028,15 @@ function printCertificate() {
 
 
   if (!w) {
+
+    if (btn) {
+
+      btn.disabled = false;
+
+      btn.textContent =
+        'Generate & Print';
+
+    }
 
     alert(
       'Please allow pop-ups for this website.'
@@ -1915,7 +2137,28 @@ Authorized Signatory
 
   setTimeout(
     function() {
+
       w.print();
+
+      if (btn) {
+
+        btn.disabled = false;
+
+        btn.textContent =
+          '✓ Generated & Print';
+
+        setTimeout(
+          function() {
+
+            btn.textContent =
+              'Generate & Print';
+
+          },
+          2000
+        );
+
+      }
+
     },
     500
   );
