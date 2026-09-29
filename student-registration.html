@@ -1,1 +1,658 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="css/style.css"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b4fa3"><title>Student Registration | Govt. Sandipani HSS School Damoh</title><meta name="description" content="Online student registration service for Govt. Sandipani HSS School Damoh."><meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"><link rel="canonical" href="https://pooran-raikwar.github.io/Sandipani-damoh/student-registration.html"><meta property="og:type" content="website"><meta property="og:title" content="Student Registration | Govt. Sandipani HSS School Damoh"><meta property="og:description" content="Online student registration service for Govt. Sandipani HSS School Damoh."><meta property="og:url" content="https://pooran-raikwar.github.io/Sandipani-damoh/student-registration.html"><meta property="og:site_name" content="Govt. Sandipani HSS School Damoh"><meta name="twitter:card" content="summary"></head><body><header class="top"><div class="top-inner"><img class="logo" src="images/campus-mark.svg" data-site-image="school-logo"><div><div class="school-name" data-school-name>Govt. Sandipani HSS School Damoh</div><div class="school-sub">Vocational Education • IT–ITeS • Online Student Records</div></div><nav class="nav"><a href="index.html">Home</a><a href="student-registration.html">Registration</a><a href="admin.html">Admin Dashboard</a><a href="results.html">Results</a></nav></div></header><main class="main"><div class="container"><div class="card hero"><span class="badge">VOCATIONAL STUDENT RECORD MANAGEMENT</span><h1>Student Online Record Form</h1><p>IT-ITeS • Trade is fixed • Job Role is automatically selected according to class.</p></div><form id="registrationForm" class="card" novalidate><div class="notice"><b>Important:</b> Samagra ID must be unique. For Class 11th–12th, Stream is required. “Completely Skipped Hindi/English” are options inside the single Additional Subject field.</div><div id="dynamicForm"><div class="loading">Loading form…</div></div><div class="submit-area"><button id="submitBtn" class="btn primary" type="submit">Save Student Record</button></div><div id="message" class="message"></div></form></div></main><footer class="footer"><div class="container"><b>Govt. Sandipani HSS School Damoh</b><br>Vocational Student Online Record Management System</div></footer><script src="js/config.js"></script><script src="js/api.js"></script><script src="js/registration.js"></script><script src="js/features.js"></script><script src="js/site-media-public.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="manifest" href="manifest.webmanifest">
+
+<meta name="theme-color" content="#0b4fa3">
+
+<title>Student Registration | Govt. Sandipani HSS School Damoh</title>
+
+<meta name="description" content="Online student registration service for Govt. Sandipani HSS School Damoh.">
+
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+
+<link rel="canonical" href="https://pooran-raikwar.github.io/Sandipani-damoh/student-registration.html">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Student Registration | Govt. Sandipani HSS School Damoh">
+<meta property="og:description" content="Online student registration service for Govt. Sandipani HSS School Damoh.">
+<meta property="og:url" content="https://pooran-raikwar.github.io/Sandipani-damoh/student-registration.html">
+<meta property="og:site_name" content="Govt. Sandipani HSS School Damoh">
+
+<meta name="twitter:card" content="summary">
+
+<style>
+
+/* =========================================================
+   SANDIPANI STUDENT REGISTRATION — PREMIUM UI
+   Visual changes only.
+   Existing fields / information / JS remain untouched.
+   ========================================================= */
+
+:root{
+  --sr-blue:#0b4fa3;
+  --sr-blue2:#1677ff;
+  --sr-cyan:#00a8d6;
+  --sr-dark:#0b1b33;
+  --sr-text:#172033;
+  --sr-muted:#64748b;
+  --sr-border:rgba(11,79,163,.14);
+  --sr-bg:#f5f9ff;
+  --sr-white:#ffffff;
+}
+
+/* Page background */
+body{
+  background:
+    radial-gradient(circle at 5% 10%,rgba(22,119,255,.10),transparent 28%),
+    radial-gradient(circle at 95% 30%,rgba(0,168,214,.09),transparent 25%),
+    linear-gradient(135deg,#f8fbff,#eef6ff 55%,#f9fcff);
+}
+
+/* Main container */
+.main{
+  padding-top:35px;
+  padding-bottom:55px;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.student-registration-page .hero{
+  position:relative;
+}
+
+.hero{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(22,119,255,.15) !important;
+  border-radius:26px !important;
+  padding:38px 35px !important;
+  background:
+    linear-gradient(135deg,
+      rgba(255,255,255,.98),
+      rgba(239,247,255,.96)) !important;
+  box-shadow:
+    0 20px 55px rgba(11,79,163,.10),
+    0 4px 15px rgba(0,0,0,.04) !important;
+}
+
+.hero:before{
+  content:"";
+  position:absolute;
+  width:230px;
+  height:230px;
+  border-radius:50%;
+  background:rgba(22,119,255,.10);
+  right:-80px;
+  top:-100px;
+  pointer-events:none;
+}
+
+.hero:after{
+  content:"";
+  position:absolute;
+  width:130px;
+  height:130px;
+  border-radius:50%;
+  background:rgba(0,188,212,.08);
+  left:-55px;
+  bottom:-65px;
+  pointer-events:none;
+}
+
+.hero .badge{
+  position:relative;
+  z-index:1;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 14px;
+  border-radius:50px;
+  background:rgba(11,79,163,.08);
+  color:var(--sr-blue);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.08em;
+  border:1px solid rgba(11,79,163,.12);
+}
+
+.hero h1{
+  position:relative;
+  z-index:1;
+  margin:17px 0 10px !important;
+  font-size:clamp(30px,4vw,44px) !important;
+  line-height:1.1;
+  letter-spacing:-.03em;
+  color:var(--sr-dark);
+}
+
+.hero p{
+  position:relative;
+  z-index:1;
+  max-width:850px;
+  margin:0 !important;
+  color:var(--sr-muted);
+  font-size:15px;
+  line-height:1.7;
+}
+
+/* =========================================================
+   MAIN FORM CARD
+   ========================================================= */
+
+#registrationForm{
+  margin-top:22px;
+  border-radius:28px !important;
+  padding:28px !important;
+  background:rgba(255,255,255,.94) !important;
+  border:1px solid rgba(11,79,163,.12) !important;
+  box-shadow:
+    0 24px 65px rgba(11,79,163,.10),
+    0 5px 20px rgba(0,0,0,.04) !important;
+}
+
+/* =========================================================
+   IMPORTANT NOTICE
+   ========================================================= */
+
+#registrationForm > .notice{
+  position:relative;
+  overflow:hidden;
+  margin-bottom:28px;
+  padding:17px 20px 17px 48px !important;
+  border-radius:17px !important;
+  border:1px solid rgba(22,119,255,.18) !important;
+  background:linear-gradient(135deg,#f0f7ff,#f8fbff) !important;
+  color:#43546c !important;
+  font-size:13px;
+  line-height:1.65;
+}
+
+#registrationForm > .notice:before{
+  content:"!";
+  position:absolute;
+  left:16px;
+  top:50%;
+  transform:translateY(-50%);
+  width:23px;
+  height:23px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:var(--sr-blue);
+  color:white;
+  font-weight:900;
+}
+
+/* =========================================================
+   DYNAMIC FORM
+   ========================================================= */
+
+#dynamicForm{
+  position:relative;
+}
+
+/* Common generated field containers */
+#dynamicForm .field,
+#dynamicForm .form-group,
+#dynamicForm .form-field{
+  position:relative;
+  margin-bottom:20px;
+}
+
+/* Generated section/card headings */
+#dynamicForm h2,
+#dynamicForm h3,
+#dynamicForm h4{
+  color:var(--sr-dark);
+}
+
+/* =========================================================
+   LABELS
+   ========================================================= */
+
+#dynamicForm label{
+  display:block;
+  margin-bottom:8px;
+  color:#26364d;
+  font-size:13px;
+  font-weight:750;
+  letter-spacing:.01em;
+}
+
+/* Required marker */
+#dynamicForm label .required,
+#dynamicForm label span.required{
+  color:#e53935;
+}
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+#dynamicForm input:not([type="checkbox"]):not([type="radio"]),
+#dynamicForm select,
+#dynamicForm textarea{
+  width:100%;
+  min-height:48px;
+  box-sizing:border-box;
+  border:1px solid #d7e2ef;
+  border-radius:13px;
+  background:#fbfdff;
+  color:#172033;
+  padding:12px 14px;
+  font-size:14px;
+  outline:none;
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease,
+    background .2s ease,
+    transform .2s ease;
+}
+
+#dynamicForm textarea{
+  min-height:105px;
+  resize:vertical;
+}
+
+#dynamicForm select{
+  cursor:pointer;
+}
+
+/* Input focus */
+#dynamicForm input:not([type="checkbox"]):not([type="radio"]):focus,
+#dynamicForm select:focus,
+#dynamicForm textarea:focus{
+  border-color:var(--sr-blue2);
+  background:#fff;
+  box-shadow:
+    0 0 0 4px rgba(22,119,255,.10),
+    0 8px 20px rgba(11,79,163,.07);
+  transform:translateY(-1px);
+}
+
+/* Placeholder */
+#dynamicForm input::placeholder,
+#dynamicForm textarea::placeholder{
+  color:#9aa8ba;
+}
+
+/* Disabled */
+#dynamicForm input:disabled,
+#dynamicForm select:disabled,
+#dynamicForm textarea:disabled{
+  background:#f1f5f9;
+  cursor:not-allowed;
+  opacity:.75;
+}
+
+/* =========================================================
+   CHECKBOX / RADIO
+   ========================================================= */
+
+#dynamicForm input[type="checkbox"],
+#dynamicForm input[type="radio"]{
+  accent-color:var(--sr-blue);
+  width:17px;
+  height:17px;
+  cursor:pointer;
+}
+
+/* Labels containing checkbox/radio */
+#dynamicForm input[type="checkbox"] + label,
+#dynamicForm input[type="radio"] + label{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* =========================================================
+   LOADING SCREEN
+   ========================================================= */
+
+#dynamicForm .loading{
+  min-height:300px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  border-radius:23px;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(22,119,255,.10),transparent 45%),
+    linear-gradient(145deg,#f8fbff,#edf6ff);
+  border:1px solid rgba(11,79,163,.13);
+  color:var(--sr-blue);
+  font-size:0;
+  position:relative;
+  overflow:hidden;
+}
+
+#dynamicForm .loading:before{
+  content:"";
+  width:58px;
+  height:58px;
+  border-radius:50%;
+  border:5px solid rgba(11,79,163,.12);
+  border-top-color:var(--sr-blue);
+  border-right-color:var(--sr-blue2);
+  animation:srSpin .85s linear infinite;
+  margin-bottom:20px;
+}
+
+#dynamicForm .loading:after{
+  content:"Loading Student Registration Form\A Please wait…\A\APreparing your registration form";
+  white-space:pre;
+  display:block;
+  font-size:17px;
+  font-weight:750;
+  line-height:1.65;
+  color:var(--sr-blue);
+}
+
+@keyframes srSpin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+/* =========================================================
+   GENERATED SECTION LOOK
+   ========================================================= */
+
+#dynamicForm > div{
+  border-radius:18px;
+}
+
+/*
+  Give direct form sections a subtle visual hierarchy
+  without changing their contents.
+*/
+
+#dynamicForm .section,
+#dynamicForm .form-section,
+#dynamicForm .card-section{
+  padding:22px;
+  margin-bottom:22px;
+  border:1px solid rgba(11,79,163,.10);
+  background:linear-gradient(145deg,#fff,#f8fbff);
+}
+
+/* =========================================================
+   BUTTON / SUBMIT
+   ========================================================= */
+
+.submit-area{
+  margin-top:28px;
+  padding-top:22px;
+  border-top:1px solid #e5edf6;
+  display:flex;
+  justify-content:flex-end;
+}
+
+#submitBtn{
+  min-height:52px;
+  padding:13px 25px !important;
+  border-radius:14px !important;
+  font-size:14px;
+  font-weight:800;
+  letter-spacing:.01em;
+  box-shadow:
+    0 12px 25px rgba(11,79,163,.18);
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease,
+    opacity .2s ease;
+}
+
+#submitBtn:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    0 16px 32px rgba(11,79,163,.23);
+}
+
+#submitBtn:active{
+  transform:translateY(0);
+}
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
+
+#message{
+  margin-top:18px;
+  border-radius:14px !important;
+  line-height:1.55;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.footer{
+  margin-top:20px;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media(max-width:700px){
+
+  .main{
+    padding-top:20px;
+  }
+
+  .hero{
+    padding:28px 20px !important;
+    border-radius:22px !important;
+  }
+
+  .hero h1{
+    font-size:30px !important;
+  }
+
+  .hero p{
+    font-size:13px;
+  }
+
+  #registrationForm{
+    padding:17px !important;
+    border-radius:22px !important;
+  }
+
+  #registrationForm > .notice{
+    padding:15px 15px 15px 43px !important;
+  }
+
+  #dynamicForm .loading{
+    min-height:270px;
+  }
+
+  #dynamicForm .loading:after{
+    font-size:15px;
+  }
+
+  .submit-area{
+    justify-content:stretch;
+  }
+
+  #submitBtn{
+    width:100%;
+  }
+}
+
+@media(max-width:420px){
+
+  .hero h1{
+    font-size:27px !important;
+  }
+
+  .hero .badge{
+    font-size:9px;
+  }
+
+  #registrationForm{
+    padding:13px !important;
+  }
+
+  #dynamicForm input:not([type="checkbox"]):not([type="radio"]),
+  #dynamicForm select,
+  #dynamicForm textarea{
+    font-size:14px;
+    min-height:46px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<header class="top">
+  <div class="top-inner">
+
+    <img
+      class="logo"
+      src="images/campus-mark.svg"
+      data-site-image="school-logo"
+      alt="Sandipani School">
+
+    <div>
+      <div class="school-name" data-school-name>
+        Govt. Sandipani HSS School Damoh
+      </div>
+
+      <div class="school-sub">
+        Vocational Education • IT–ITeS • Online Student Records
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="student-registration.html">Registration</a>
+      <a href="admin.html">Admin Dashboard</a>
+      <a href="results.html">Results</a>
+    </nav>
+
+  </div>
+</header>
+
+
+<main class="main">
+
+  <div class="container">
+
+    <!-- =================================================
+         PREMIUM PAGE HERO
+         ================================================= -->
+
+    <div class="card hero">
+
+      <span class="badge">
+        🎓 VOCATIONAL STUDENT RECORD MANAGEMENT
+      </span>
+
+      <h1>
+        Student Online Record Form
+      </h1>
+
+      <p>
+        IT-ITeS • Trade is fixed • Job Role is automatically selected according to class.
+      </p>
+
+    </div>
+
+
+    <!-- =================================================
+         EXISTING FORM — FUNCTIONALITY UNCHANGED
+         ================================================= -->
+
+    <form
+      id="registrationForm"
+      class="card"
+      novalidate
+    >
+
+      <div class="notice">
+        <b>Important:</b>
+        Samagra ID must be unique. For Class 11th–12th, Stream is required.
+        “Completely Skipped Hindi/English” are options inside the single Additional Subject field.
+      </div>
+
+
+      <!--
+        registration.js dynamically creates the complete form here.
+        DO NOT remove this ID.
+      -->
+
+      <div id="dynamicForm">
+
+        <div class="loading">
+          Loading form…
+        </div>
+
+      </div>
+
+
+      <div class="submit-area">
+
+        <button
+          id="submitBtn"
+          class="btn primary"
+          type="submit"
+        >
+          Save Student Record
+        </button>
+
+      </div>
+
+
+      <div
+        id="message"
+        class="message"
+      ></div>
+
+    </form>
+
+  </div>
+
+</main>
+
+
+<footer class="footer">
+
+  <div class="container">
+
+    <b>
+      Govt. Sandipani HSS School Damoh
+    </b>
+
+    <br>
+
+    Vocational Student Online Record Management System
+
+  </div>
+
+</footer>
+
+
+<!-- =====================================================
+     EXISTING JAVASCRIPT — UNCHANGED
+     ===================================================== -->
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/registration.js"></script>
+<script src="js/features.js"></script>
+<script src="js/site-media-public.js"></script>
+
+</body>
+</html>
