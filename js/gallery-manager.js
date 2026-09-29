@@ -132,4 +132,62 @@ $('uploadBtn').onclick=async()=>{
   };
   reader.readAsDataURL(f);
 };
+  /* =========================================================
+   PROFILE / SITE IMAGE UPLOAD
+   Existing Gallery Upload remains unchanged.
+   ========================================================= */
+
+$('profileFile').onchange=()=>{
+  const f=$('profileFile').files[0];
+  if(!f)return;
+
+  $('profilePreview').src=URL.createObjectURL(f);
+  $('profilePreview').classList.remove('hidden');
+};
+
+$('profileUploadBtn').onclick=async()=>{
+  const f=$('profileFile').files[0];
+
+  if(!f)
+    return msg('profileStatus','Please select a profile image.','error');
+
+  if(f.size>8*1024*1024)
+    return msg('profileStatus','Please use an image below 8 MB.','error');
+
+  const reader=new FileReader();
+
+  reader.onload=async()=>{
+    try{
+      $('profileUploadBtn').disabled=true;
+      $('profileUploadBtn').textContent='Uploading…';
+
+      await call('siteMediaSave',{
+        pin:PIN,
+        data:{
+          key:'teacher-profile',
+          fileName:f.name,
+          mimeType:f.type,
+          base64:reader.result
+        }
+      });
+
+      $('profileFile').value='';
+      $('profilePreview').classList.add('hidden');
+
+      msg(
+        'profileStatus',
+        'Profile photo uploaded successfully.',
+        'success'
+      );
+
+    }catch(e){
+      msg('profileStatus',e.message,'error');
+    }finally{
+      $('profileUploadBtn').disabled=false;
+      $('profileUploadBtn').textContent='Upload Profile Photo';
+    }
+  };
+
+  reader.readAsDataURL(f);
+};
 })();
