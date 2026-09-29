@@ -935,22 +935,45 @@ async function uploadResource() {
   const f =
     $('rFile').files[0];
 
-
   if (!f) {
 
     $('resourceMsg').textContent =
       'Please choose a file.';
 
+    $('resourceMsg').className =
+      'message error';
+
     return;
 
   }
 
+  const btn =
+    document.querySelector(
+      'button[onclick="uploadResource()"]'
+    );
 
   try {
 
+    // Show uploading status immediately
+    $('resourceMsg').textContent =
+      '⏳ Uploading file... Please wait.';
+
+    $('resourceMsg').className =
+      'message info';
+
+    // Prevent double upload
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Uploading...';
+    }
+
+    // Give browser time to display message
+    await new Promise(function(resolve) {
+      setTimeout(resolve, 100);
+    });
+
     const x =
       await fileData(f);
-
 
     await API.uploadResource(
 
@@ -982,24 +1005,39 @@ async function uploadResource() {
 
     );
 
-
     $('resourceMsg').textContent =
-      'Uploaded successfully.';
+      '✓ Resource uploaded successfully.';
 
+    $('resourceMsg').className =
+      'message success';
+
+    // Clear file after successful upload
+    $('rFile').value = '';
 
     await loadResources();
 
-
   } catch (e) {
 
+    console.error('Resource Upload Error:', e);
+
     $('resourceMsg').textContent =
-      e.message ||
-      'Upload failed.';
+      '✕ Upload failed: ' +
+      (e.message || 'Please try again.');
+
+    $('resourceMsg').className =
+      'message error';
+
+  } finally {
+
+    // Enable button again
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Upload Resource';
+    }
 
   }
 
 }
-
 
 async function loadResources() {
 
