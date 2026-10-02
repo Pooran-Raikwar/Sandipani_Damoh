@@ -122,6 +122,16 @@ const API = (() => {
     syncIndustryStudent:data=>call('industrySyncStudent',data||{}),
 
     // Admission Test & Merit — centrally stored in Google Sheets.
+    getLearningPublic:()=>call('learningPublic'),
+    getPracticalPublic:()=>call('practicalPublic'),
+    getQuizPublic:()=>call('quizPublic'),
+    getLearningCourses:(pin)=>call('learningCourses',{pin}),
+    getLearningLessons:(pin)=>call('learningLessons',{pin}),
+    getPracticalModules:(pin)=>call('practicalModules',{pin}),
+    getQuizBank:(pin)=>call('quizBank',{pin}),
+    saveContent:(pin,type,data)=>call('contentSave',{pin,type,data}),
+    deleteContent:(pin,type,id)=>call('contentDelete',{pin,type,id}),
+
     getAdmissionTests:pin=>call('admissionTests',{pin}),
     getAdmissionCandidates:(pin,testId)=>call('admissionCandidates',{pin,testId}),
     saveAdmissionTest:(pin,data)=>call('admissionTestSave',{pin,data}),

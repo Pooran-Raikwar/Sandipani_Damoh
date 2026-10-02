@@ -1,5 +1,5 @@
 (function(){'use strict';
-const BUILTIN=[
+let BUILTIN=[
 {id:'it9-digital-q1',class:'9th',trade:'IT-ITeS',unit:'Digital Foundations',mode:'practice',time:0,questions:[
 ['Which device is mainly used to enter text into a computer?',['Monitor','Keyboard','Speaker','Projector'],1,'A keyboard is an input device used to enter text and commands.'],
 ['Which is a strong password practice?',['Use your name','Use 123456','Use a long unique password','Share it with friends'],2,'A long, unique password is safer than common or reused passwords.'],
@@ -76,4 +76,5 @@ function renderHistory(){if(!history.length){$('historyGrid').innerHTML='<div cl
 function filters(){renderCatalog();}
 $('quizSearch').oninput=filters;$('quizClass').onchange=filters;$('quizTrade').onchange=filters;$('quizMode').onchange=filters;$('resetQuizFilters').onclick=()=>{$('quizSearch').value='';$('quizClass').value='all';$('quizTrade').value='all';$('quizMode').value='all';renderCatalog();};$('historyBtn').onclick=()=>$('history').scrollIntoView({behavior:'smooth'});$('clearHistory').onclick=()=>{if(confirm('Clear all quiz history from this device?')){history=[];saveHist();}};document.querySelectorAll('[data-close]').forEach(x=>x.onclick=closeModal);$('quizMenu').onclick=()=>document.querySelector('.quiz-nav nav').classList.toggle('open');
 renderCatalog();renderStats();renderHistory();
+(async function loadCentralQuiz(){try{if(typeof API!=='undefined'){const r=await API.getQuizPublic();const qs=(r&&r.questions)||[];const grouped={};qs.forEach(x=>{const key=String(x.Class)+'|'+String(x.Trade)+'|'+String(x.Unit);(grouped[key]||(grouped[key]=[])).push([String(x.Question),[String(x['Option A']),String(x['Option B']),String(x['Option C']),String(x['Option D'])],Number(x.Correct)||0,String(x.Explanation||'')]);});Object.keys(grouped).forEach(k=>{const [cls,trade,unit]=k.split('|'),sample=qs.find(x=>String(x.Class)+'|'+String(x.Trade)+'|'+String(x.Unit)===k);BUILTIN=[...BUILTIN.filter(q=>q.id!=='central-'+k),{id:'central-'+k,class:cls,trade,unit,mode:String(sample.Mode||'practice'),time:Number(sample.Time)||0,questions:grouped[k]}];});renderCatalog();renderStats();}}catch(e){console.warn('Central Quiz unavailable; using built-in bank.',e)}})();
 })();

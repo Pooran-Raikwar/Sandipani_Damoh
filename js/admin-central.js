@@ -12,7 +12,14 @@
       if(module==='industry'){showTab('industry'); return;}
       if(module==='admission'){showTab('admission'); return;}
       if(module==='settings'){showTab('settings'); return;}
+      if(module==='contentLearning'){showTab('content'); setTimeout(()=>ContentAdmin.select('learningCourses'),0); return;}
+      if(module==='contentPractical'){showTab('content'); setTimeout(()=>ContentAdmin.select('practicalModules'),0); return;}
+      if(module==='contentQuiz'||module==='quiz'){showTab('content'); setTimeout(()=>ContentAdmin.select('quizBank'),0); return;}
       const urls={
+        learning:'learning-hub.html',
+        practical:'practical-lab.html',
+        quizPublic:'quiz.html',
+        skillPublic:'skill-passport.html',
         gallery:'gallery-manager.html?embedded=1&central=1',
         books:'admin-advanced.html?embedded=1&central=1#resources',
         content:'admin-advanced.html?embedded=1&central=1#notice',

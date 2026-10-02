@@ -27,5 +27,5 @@ document.addEventListener('click',e=>{const openBtn=e.target.closest('[data-open
 document.getElementById('moduleFilter').onchange=e=>{document.querySelectorAll('.lab-card').forEach(c=>c.style.display=e.target.value==='all'||c.dataset.module===e.target.value?'':'none')};
 document.getElementById('clearRecord').onclick=()=>{if(confirm('Clear all local practical records?')){localStorage.removeItem(KEY);renderStats();renderHistory()}};
 document.getElementById('labMenu').onclick=()=>document.querySelector('.lab-nav nav').classList.toggle('open');
-renderStats();renderHistory();
+(async function loadCentralPractical(){try{if(typeof API!=='undefined'){const r=await API.getPracticalPublic();const mods=(r&&r.modules)||[];mods.forEach(m=>{const card=[...document.querySelectorAll('.lab-card')].find(c=>c.dataset.module===String(m.Module));if(card){const h=card.querySelector('h3'),p=card.querySelector('p'),tag=card.querySelector('.lab-tag');if(h&&m.Title)h.textContent=m.Title;if(p&&m.Description)p.textContent=m.Description;if(tag&&m.Module)tag.textContent=String(m.Module).toUpperCase()+' • CENTRAL';}});}}catch(e){console.warn('Central Practical metadata unavailable; using built-in lab.',e)}renderStats();renderHistory();})();
 })();
