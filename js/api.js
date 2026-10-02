@@ -119,7 +119,16 @@ const API = (() => {
     getInternships:(pin,filters)=>call('internships',{pin,filters}),
     saveInternship:(pin,data)=>call('internshipSave',{pin,data}),
     deleteInternship:(pin,id)=>call('internshipDelete',{pin,id}),
-    syncIndustryStudent:data=>call('industrySyncStudent',data||{})
+    syncIndustryStudent:data=>call('industrySyncStudent',data||{}),
+
+    // Admission Test & Merit — centrally stored in Google Sheets.
+    getAdmissionTests:pin=>call('admissionTests',{pin}),
+    getAdmissionCandidates:(pin,testId)=>call('admissionCandidates',{pin,testId}),
+    saveAdmissionTest:(pin,data)=>call('admissionTestSave',{pin,data}),
+    deleteAdmissionTest:(pin,id)=>call('admissionTestDelete',{pin,id}),
+    saveAdmissionCandidate:(pin,data)=>call('admissionCandidateSave',{pin,data}),
+    deleteAdmissionCandidate:(pin,id)=>call('admissionCandidateDelete',{pin,id}),
+    getAdmissionMerit:(pin,testId)=>call('admissionMerit',{pin,testId})
   };
 })();
 

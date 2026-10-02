@@ -1,7 +1,7 @@
 /* Sandipani Future Features: independent UI layer; does not replace API/backend. */
 (()=>{
  const pages=[
-  ['Home','index.html','Homepage and digital campus'],['Student Registration','student-registration.html','Add or register a student'],['Results','results.html','Search academic results'],['Gallery','gallery.html','Campus photos and activities'],['About','about.html','School and vocational information'],['Marks Entry','marks-entry.html','Enter academic marks'],['Admin Dashboard','admin.html','Secure administration portal'],['Gallery Manager','gallery-manager.html','Manage gallery content'],['Vocational','vocational.html','Vocational education information'],['Books & Notes','resources.html','Class 9th–12th vocational digital library'],['AI Assistant','ai-assistant.html','Real AI study assistant'],['Advanced Admin','admin-advanced.html','Command center for resources and management']
+  ['Home','index.html','Homepage and digital campus'],['Student Registration','student-registration.html','Add or register a student'],['Results','results.html','Search academic results'],['Gallery','gallery.html','Campus photos and activities'],['About','about.html','School and vocational information'],['Marks Entry','marks-entry.html','Enter academic marks'],['Admin Dashboard','admin.html','Secure administration portal'],['Gallery Manager','gallery-manager.html','Manage gallery content'],['Vocational','vocational.html','Vocational education information'],['Books & Notes','resources.html','Class 9th–12th vocational digital library'],['AI Assistant','ai-assistant.html','Real AI study assistant'],['Admission Test & Merit','admission-test.html','Admission test, seats and automatic merit'],['Advanced Admin','admin-advanced.html','Command center for resources and management']
  ];
  const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9\s-]/g,'');
  function inject(){
@@ -22,20 +22,18 @@
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',inject);else inject();
 })();
 
-// Premium UX: global loading/search feedback and broken-image recovery.
+// Universal loading is provided by js/loading-ui.js so it also covers scripts that run before DOMContentLoaded.
+
+// Universal file-operation UX: upload progress, download feedback and image loading states.
 (()=>{
- function ensureLoader(){
-  if(document.getElementById('globalWait'))return;
-  const d=document.createElement('div');d.id='globalWait';d.className='global-wait';d.innerHTML='<div class="wait-card"><div class="wait-spinner"></div><b>Loading campus...</b><span>Please wait</span></div>';document.body.appendChild(d);
+ function progressBox(){let b=document.getElementById('fileProgress');if(b)return b;b=document.createElement('div');b.id='fileProgress';b.className='file-progress';b.innerHTML='<div class="fp-head"><span id="fpTitle">Working…</span><b id="fpPct">0%</b></div><div class="fp-track"><div id="fpBar" class="fp-bar"></div></div>';document.body.appendChild(b);return b;}
+ function showProgress(title,pct){const b=progressBox();b.classList.add('show');document.getElementById('fpTitle').textContent=title;document.getElementById('fpPct').textContent=Math.round(pct)+'%';document.getElementById('fpBar').style.width=Math.max(0,Math.min(100,pct))+'%';}
+ function hideProgress(delay=350){setTimeout(()=>document.getElementById('fileProgress')?.classList.remove('show'),delay);}
+ function bind(){
+  document.querySelectorAll('input[type="file"]').forEach(input=>{if(input.dataset.fileUx)return;input.dataset.fileUx='1';input.addEventListener('change',()=>{const files=[...input.files||[]];if(!files.length)return;const total=files.reduce((n,f)=>n+f.size,0)||1;let done=0;showProgress(files.length===1?'Preparing '+files[0].name:'Preparing '+files.length+' files',0);files.forEach(f=>{const reader=new FileReader();reader.onprogress=e=>{if(e.lengthComputable){const current=done+(e.loaded/e.total*f.size);showProgress('Reading '+f.name,current/total*100)}};reader.onloadend=()=>{done+=f.size;showProgress('Files ready',done/total*100);if(done>=total)hideProgress(500)};reader.readAsArrayBuffer(f)});});});
+  document.querySelectorAll('a[download],button[data-download],.download-btn').forEach(a=>{if(a.dataset.downloadUx)return;a.dataset.downloadUx='1';a.addEventListener('click',()=>{showProgress('Preparing download…',35);setTimeout(()=>showProgress('Download ready',100),250);hideProgress(900)});});
+  document.querySelectorAll('img').forEach(img=>{if(img.dataset.mediaUx)return;img.dataset.mediaUx='1';img.classList.add('media-loading');const done=()=>img.classList.add('media-loaded');if(img.complete)done();else img.addEventListener('load',done,{once:true});});
  }
- function show(){ensureLoader();document.getElementById('globalWait').classList.add('show');}
- function hide(){document.getElementById('globalWait')?.classList.remove('show');}
- const nativeFetch=window.fetch;
- window.fetch=async function(...args){show();try{return await nativeFetch.apply(this,args)}finally{hide()}};
- document.addEventListener('DOMContentLoaded',()=>{
-   document.querySelectorAll('img').forEach(img=>{if(!img.dataset.localFallback)img.dataset.localFallback=img.getAttribute('src')||'';img.addEventListener('error',()=>{if(img.dataset.localFallback && img.src!==new URL(img.dataset.localFallback,document.baseURI).href){img.src=img.dataset.localFallback;}});});
-   document.querySelectorAll('form').forEach(form=>form.addEventListener('submit',()=>show()));
-   document.querySelectorAll('a[href]').forEach(a=>{const href=a.getAttribute('href')||'';if(!href||href.startsWith('#')||href.startsWith('http')||href.startsWith('mailto:')||href.startsWith('javascript:'))return;a.addEventListener('click',()=>{show();setTimeout(hide,7000)});});
-   setTimeout(hide,5000);
- });
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
+ const mo=new MutationObserver(()=>bind());mo.observe(document.documentElement,{childList:true,subtree:true});
 })();

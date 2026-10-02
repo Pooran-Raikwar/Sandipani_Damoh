@@ -126,6 +126,7 @@ function tabs(){
 
 async function init(){
  tabs();
+ const box=document.getElementById('dynamicGallery'); if(box) box.innerHTML='<div class="gallery-skeleton-grid">'+Array.from({length:6},()=>'<div class="gallery-skeleton"><i></i><span></span></div>').join('')+'</div>';
  try{
    const remote=await call('galleryList');
    render(Array.isArray(remote)?remote:[]);

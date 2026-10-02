@@ -76,19 +76,20 @@ async function editGallery(id){
 }
 function chooseImage_(){return new Promise(resolve=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>resolve(i.files[0]||null);i.click();});}
 function fileToBase64_(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve({base64:r.result,mimeType:f.type,fileName:f.name});r.onerror=reject;r.readAsDataURL(f);});}
-$('loginBtn').onclick=async()=>{
+async function bootGalleryAdmin(){
   try{
-    const d=await call('verifyAdmin',{pin:$('pin').value.trim()});
-    if(!d.valid)throw new Error('Invalid Admin PIN');
-    PIN=$('pin').value.trim();
+    PIN=await AdminAuth.require();
+    if(!PIN)return;
     if(window.SiteMedia)window.SiteMedia.setPin(PIN);
     $('login').classList.add('hidden');
     $('panel').classList.remove('hidden');
     await load();
-  }catch(e){
-    msg('loginMsg',e.message,'error');
-  }
-};
+  }catch(e){msg('loginMsg',e.message,'error');}
+}
+$('loginBtn').onclick=()=>location.href='admin.html';
+
+
+document.addEventListener('DOMContentLoaded',bootGalleryAdmin);
 
 $('file').onchange=()=>{
   const f=$('file').files[0];
