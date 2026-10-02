@@ -32,3 +32,7 @@ GitHub Pages cannot execute Apps Script server code. The Apps Script `/exec` URL
 3. Optional: add `OPENAI_AI_MODEL` with `gpt-5.6-luna` (default) or another model available to your API project.
 4. Deploy a new Web App version after saving `backend/Code.gs`.
 5. Open `ai-assistant.html` and test a question. The API key is server-side and is not exposed to GitHub Pages.
+
+## V8 Vocational Learning Hub
+
+The V8 layer adds a class/trade/medium filtered Vocational Learning Hub at `learning-hub.html`. Progress and saved courses are stored locally on the student device; no backend changes are required for this learning layer.

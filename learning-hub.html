@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="css/style.css"><link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b4fa3">
+<title>Vocational Learning Hub | Sandipani HSS Damoh</title>
+<meta name="description" content="Class-wise vocational learning hub for IT-ITeS and Agriculture: lessons, practical learning, quizzes, notes and student progress.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://pooran-raikwar.github.io/Sandipani-damoh/learning-hub.html">
+</head>
+<body class="learning-page">
+<header class="learning-top">
+  <div class="learning-nav shell">
+    <a class="learning-brand" href="index.html"><img src="images/campus-mark.svg" data-site-image="school-logo"><span><b>Sandipani Vocational</b><small>Learning Hub • Govt. Sandipani HSS School Damoh</small></span></a>
+    <nav><a href="index.html">Home</a><a class="active" href="learning-hub.html">Learning</a><a href="practical-lab.html">Practical Lab</a><a href="quiz.html">Quiz</a><a href="resources.html">Library</a><a href="results.html">Results</a><a href="admin.html">Admin</a></nav>
+    <button class="learn-menu" id="learnMenu">☰</button>
+  </div>
+</header>
+<main>
+<section class="learn-hero"><div class="shell learn-hero-grid">
+  <div><span class="learn-eyebrow">DIGITAL VOCATIONAL CLASSROOM</span><h1>Learn a skill.<br><span>Practice it.</span><br>Build your future.</h1><p>Class-wise learning for IT-ITeS and Agriculture with lessons, practical activities, resources and personal progress tracking.</p>
+  <div class="learn-actions"><a class="learn-btn primary" href="#catalog">Explore Learning</a><a class="learn-btn glass" href="practical-lab.html">🛠 Practical Lab</a><a class="learn-btn glass" href="quiz.html">🧠 Quiz Centre</a><button class="learn-btn glass" id="continueBtn">▶ Continue Learning</button></div>
+  <div class="learn-trust"><span>✓ Class 9th–12th</span><span>✓ Hindi + English</span><span>✓ Progress saved on this device</span></div></div>
+  <div class="learn-dashboard"><div class="mini-progress"><div class="mp-top"><b>My Learning</b><span id="overallPct">0%</span></div><div class="progress-track"><i id="overallBar"></i></div><div class="mp-grid"><div><strong id="completedCount">0</strong><small>Lessons done</small></div><div><strong id="savedCount">0</strong><small>Saved</small></div><div><strong id="courseCount">0</strong><small>Courses</small></div></div></div>
+  <div class="skill-orbit"><span>LEARN</span><span>PRACTICE</span><span>CHECK</span><span>PROGRESS</span><div>SKILL<br><b>HUB</b></div></div></div>
+</div></section>
+
+<section class="learn-section" id="catalog"><div class="shell">
+  <div class="learn-head"><div><span class="learn-kicker">LEARNING CATALOG</span><h2>Find your course</h2><p>Filter by class, trade and medium, or search any topic.</p></div><button class="filter-reset" id="resetFilters">Reset</button></div>
+  <div class="learning-filters"><label><span>Search</span><input id="searchInput" placeholder="Search typing, Excel, crops..." autocomplete="off"></label><label><span>Class</span><select id="classFilter"><option value="all">All Classes</option><option>9th</option><option>10th</option><option>11th</option><option>12th</option></select></label><label><span>Trade</span><select id="tradeFilter"><option value="all">All Trades</option><option>IT-ITeS</option><option>Agriculture</option></select></label><label><span>Medium</span><select id="mediumFilter"><option value="all">All Mediums</option><option>Hindi</option><option>English</option></select></label></div>
+  <div class="trade-tabs"><button class="trade-tab active" data-trade="all">All</button><button class="trade-tab" data-trade="IT-ITeS">💻 IT-ITeS</button><button class="trade-tab" data-trade="Agriculture">🌱 Agriculture</button></div>
+  <div id="courseGrid" class="course-grid"></div><div id="emptyState" class="empty-learning hidden"><div>🔎</div><h3>No matching course</h3><p>Try another class, trade, medium or search term.</p></div>
+</div></section>
+
+<section class="learn-section soft"><div class="shell"><div class="learn-head"><div><span class="learn-kicker">MY PROGRESS</span><h2>Continue where you stopped</h2><p>Your progress is stored locally on this device. No account is required.</p></div></div><div id="progressGrid" class="progress-grid"></div></div></section>
+
+<section class="learn-section"><div class="shell feature-learning-grid">
+ <article><div class="fl-icon">📘</div><h3>Structured Lessons</h3><p>Move from concept to examples and practice in a clear lesson sequence.</p></article>
+ <article><div class="fl-icon">🛠️</div><h3>Practical First</h3><p>Every course can carry practical tasks, field activities and project work.</p></article>
+ <article><div class="fl-icon">🧠</div><h3>Quick Check</h3><p>Use lesson checks to reinforce learning before moving ahead.</p></article>
+ <article><div class="fl-icon">🏅</div><h3>Skill Journey</h3><p>Build a visible learning record that can later connect with the Skill Passport.</p></article>
+</div></section>
+</main>
+<footer class="learning-footer"><div class="shell"><b>Sandipani Vocational Learning Hub</b><span>Learning • Practice • Skills • Career</span></div></footer>
+
+<div class="lesson-modal hidden" id="lessonModal"><div class="lesson-backdrop" data-close></div><div class="lesson-panel"><button class="lesson-close" id="lessonClose">×</button><div id="lessonBody"></div></div></div>
+<script src="js/features.js"></script><script src="js/site-media-public.js"></script><script src="js/learning-hub.js"></script>
+</body></html>
