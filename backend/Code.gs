@@ -3,11 +3,11 @@
  * GitHub Pages frontend + Google Apps Script + Google Sheets storage.
  *
  * Deploy as Web App: Execute as Me / Who has access: Anyone.
- * Set Script Property ADMIN_PIN for production (default is 2580).
+ * Set Script Property ADMIN_PIN for production (default is 87654300).
  */
 const PROP = PropertiesService.getScriptProperties();
 const DEFAULT_PIN = '87654300';
-const SHEETS = { students:'Students', marks:'Marks', settings:'FormSettings', config:'AppConfig', deleted:'Deleted Records', audit:'Audit Log', gallery:'Gallery', books:'Books', notes:'Notes', notices:'Notices', guestLectures:'Guest Lectures', applications:'Applications', staff:'Staff', documents:'Documents', siteMedia:'Site Media', skillPassport:'Skill Passport', skillVerifications:'Skill Verifications', certificates:'Skill Certificates', portfolio:'Student Portfolio', industryPartners:'Industry Partners', industryActivities:'Industry Activities', guestAttendance:'Guest Lecture Attendance', visitAttendance:'Industrial Visit Attendance', internships:'Internships' };
+const SHEETS = { admissionTests:'Admission Tests', admissionCandidates:'Admission Test Candidates', admissionMerit:'Admission Merit List', admissionSelected:'Admission Selected Students', students:'Students', marks:'Marks', settings:'FormSettings', config:'AppConfig', deleted:'Deleted Records', audit:'Audit Log', gallery:'Gallery', books:'Books', notes:'Notes', notices:'Notices', guestLectures:'Guest Lectures', applications:'Applications', staff:'Staff', documents:'Documents', siteMedia:'Site Media', skillPassport:'Skill Passport', skillVerifications:'Skill Verifications', certificates:'Skill Certificates', portfolio:'Student Portfolio', industryPartners:'Industry Partners', industryActivities:'Industry Activities', guestAttendance:'Guest Lecture Attendance', visitAttendance:'Industrial Visit Attendance', internships:'Internships' };
 const STUDENT_HEADERS = [
   'Timestamp','Academic Year','Class','Section','Roll Number','Student Name',"Father's Name",'Medium','Gender','Mobile Number','Samagra ID',
   'Trade','Job Role','Stream','IT Subject Opted in Place of This Language','Additional Subject','Status'
@@ -45,6 +45,10 @@ const PARTNER_HEADERS=['Partner ID','Created At','Organization','Type','Contact 
 const ACTIVITY_HEADERS=['Activity ID','Created At','Activity Type','Title','Academic Year','Class','Trade','Date','Partner ID','Partner/Guest','Topic/Role','Duration','Objective','Learning Outcomes','Status','Evidence URL','Notes'];
 const ATTEND_HEADERS=['Record ID','Created At','Activity ID','Academic Year','Class','Roll Number','Student Name','Attendance','Participation','Learning Outcome','Verified','Verified By','Notes'];
 const INTERNSHIP_HEADERS=['Internship ID','Created At','Academic Year','Class','Roll Number','Student Name','Trade','Organization','Role','Mentor','Start Date','End Date','Duration','Status','Skills Learned','Certificate ID','Evidence URL','Verified','Verified By','Notes'];
+const ADMISSION_TEST_HEADERS=['Test ID','Created At','Academic Year','Class','Trade','Job Role','Test Date','Total Seats','Max Marks','Selection Rule','Status','Notes'];
+const ADMISSION_CANDIDATE_HEADERS=['Candidate ID','Created At','Test ID','Academic Year','Class','Trade','Job Role','Application No','Roll Number','Student Name',"Father's Name",'Mobile','Marks','Max Marks','Percentage','Rank','Status','Tie Breaker','Notes'];
+const ADMISSION_MERIT_HEADERS=['Rank','Candidate ID','Test ID','Academic Year','Class','Trade','Job Role','Application No','Roll Number','Student Name',"Father's Name",'Mobile','Marks','Max Marks','Percentage','Status','Tie Breaker','Updated At'];
+const ADMISSION_SELECTED_HEADERS=['Selection ID','Selected At','Test ID','Rank','Candidate ID','Academic Year','Class','Trade','Job Role','Application No','Roll Number','Student Name',"Father's Name",'Mobile','Marks','Max Marks','Percentage','Status'];
 
 // -------------------- GALLERY --------------------
 const GALLERY_HEADERS=['ID','Uploaded At','Section','Title','File Name','File ID','Image URL'];
@@ -98,6 +102,10 @@ function setup_(){
   ensureSheet_(SHEETS.guestAttendance,ATTEND_HEADERS);
   ensureSheet_(SHEETS.visitAttendance,ATTEND_HEADERS);
   ensureSheet_(SHEETS.internships,INTERNSHIP_HEADERS);
+  ensureSheet_(SHEETS.admissionTests,ADMISSION_TEST_HEADERS);
+  ensureSheet_(SHEETS.admissionCandidates,ADMISSION_CANDIDATE_HEADERS);
+  ensureSheet_(SHEETS.admissionMerit,ADMISSION_MERIT_HEADERS);
+  ensureSheet_(SHEETS.admissionSelected,ADMISSION_SELECTED_HEADERS);
   ensureSheet_(SHEETS.siteMedia,SITE_MEDIA_HEADERS);
   ensureSheet_(SHEETS.skillPassport,SKILL_HEADERS);
   ensureSheet_(SHEETS.skillVerifications,['Skill ID','Updated At','Academic Year','Class','Roll Number','Student Name','Skill Name','Level','Status','Verified By','Verified At','Evidence','Notes']);
@@ -554,6 +562,34 @@ function portfolioDelete_(pin,id){if(!verify_(pin))throw new Error('Invalid Admi
 function certificateList_(pin,filters){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();let out=values_(sheet_(SHEETS.certificates)).map(r=>obj_(headers_(sheet_(SHEETS.certificates)),r));const q=norm_(filters&&filters.search).toLowerCase();return out.filter(x=>!q||[x['Student Name'],x['Roll Number'],x['Certificate ID'],x['Certificate Title']].some(v=>norm_(v).toLowerCase().includes(q))).reverse();}
 function certificateIssue_(pin,d){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();d=d||{};const b=matchStudentBase_(d),title=norm_(d.title||d['Certificate Title']),skill=norm_(d.skill||d['Skill/Competency']);if(!b.academicYear||!b.class||!b.roll||!b.name||!title)throw new Error('Student and certificate title are required.');const id=norm_(d.id)||('SAND-'+new Date().getFullYear()+'-'+Utilities.getUuid().slice(0,8).toUpperCase());const sh=sheet_(SHEETS.certificates);sh.appendRow([id,new Date(),b.academicYear,b.class,b.roll,b.name,b.trade,title,skill,norm_(d.level)||'Verified',norm_(d.issuedBy)||'Vocational Teacher',norm_(d.validUntil||''),'Verified',norm_(d.notes||'')]);audit_('CERTIFICATE_ISSUED',b.name+' / '+id);return {id};}
 function certificateDelete_(pin,id){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();const sh=sheet_(SHEETS.certificates),h=headers_(sh),rows=values_(sh),ii=h.indexOf('Certificate ID'),idx=rows.findIndex(r=>norm_(r[ii])===norm_(id));if(idx<0)throw new Error('Certificate not found.');sh.deleteRow(idx+2);audit_('CERTIFICATE_DELETE',id);return true;}
+
+// -------------------- ADMISSION TEST & MERIT --------------------
+function admissionId_(prefix){return prefix+'-'+new Date().getFullYear()+'-'+Utilities.getUuid().slice(0,8).toUpperCase();}
+function admissionTestList_(pin){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();return values_(sheet_(SHEETS.admissionTests)).map(r=>obj_(headers_(sheet_(SHEETS.admissionTests)),r)).reverse();}
+function admissionCandidates_(pin,testId){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();const sh=sheet_(SHEETS.admissionCandidates),h=headers_(sh);let rows=values_(sh).map(r=>obj_(h,r));if(testId)rows=rows.filter(x=>norm_(x['Test ID'])===norm_(testId));return rows;}
+function admissionRebuildMerit_(testId){
+  const ts=sheet_(SHEETS.admissionTests), th=headers_(ts), tr=values_(ts).map(r=>obj_(th,r)).find(x=>norm_(x['Test ID'])===norm_(testId));
+  if(!tr)throw new Error('Admission test not found.');
+  const cs=sheet_(SHEETS.admissionCandidates), ch=headers_(cs), rows=values_(cs).map(r=>obj_(ch,r)).filter(x=>norm_(x['Test ID'])===norm_(testId));
+  const max=Number(tr['Max Marks'])||100, seats=Math.max(0,Number(tr['Total Seats'])||0);
+  rows.forEach(x=>{x._pct=max?Math.round((Number(x.Marks)||0)/max*10000)/100:0;});
+  rows.sort((a,b)=>(b._pct-a._pct)||(Number(b['Tie Breaker']||0)-Number(a['Tie Breaker']||0))||norm_(a['Student Name']).localeCompare(norm_(b['Student Name'])));
+  let lastPct=null,lastRank=0;rows.forEach((x,i)=>{if(x._pct!==lastPct)lastRank=i+1;x._rank=lastRank;x._status=x._rank<=seats?'Selected':'Waiting';lastPct=x._pct;});
+  const mh=headers_(sheet_(SHEETS.admissionMerit)); const ms=sheet_(SHEETS.admissionMerit); const existing=values_(ms).map(r=>obj_(mh,r));
+  for(let i=existing.length-1;i>=0;i--)if(norm_(existing[i]['Test ID'])===norm_(testId))ms.deleteRow(i+2);
+  rows.forEach(x=>ms.appendRow([x._rank,x['Candidate ID'],testId,tr['Academic Year'],tr.Class,tr.Trade,tr['Job Role'],x['Application No'],x['Roll Number'],x['Student Name'],x["Father's Name"],x.Mobile,Number(x.Marks)||0,max,x._pct,x._status,x['Tie Breaker'],new Date()]));
+  const ss=sheet_(SHEETS.admissionSelected), sh=ss, shh=headers_(sh), old=values_(sh).map(r=>obj_(shh,r));
+  for(let i=old.length-1;i>=0;i--)if(norm_(old[i]['Test ID'])===norm_(testId))sh.deleteRow(i+2);
+  rows.filter(x=>x._status==='Selected').forEach(x=>sh.appendRow([admissionId_('SEL'),new Date(),testId,x._rank,x['Candidate ID'],tr['Academic Year'],tr.Class,tr.Trade,tr['Job Role'],x['Application No'],x['Roll Number'],x['Student Name'],x["Father's Name"],x.Mobile,Number(x.Marks)||0,max,x._pct,'Selected']));
+  // Keep candidate sheet's calculated rank/status in sync.
+  const data=values_(cs); data.forEach((r,i)=>{const id=norm_(r[ch.indexOf('Candidate ID')]);const x=rows.find(y=>norm_(y['Candidate ID'])===id);if(x){r[ch.indexOf('Max Marks')]=max;r[ch.indexOf('Percentage')]=x._pct;r[ch.indexOf('Rank')]=x._rank;r[ch.indexOf('Status')]=x._status;}});if(data.length)cs.getRange(2,1,data.length,ch.length).setValues(data.map(r=>ch.map(k=>r[ch.indexOf(k)])));
+  return {test:tr,merit:rows.map(x=>({candidateId:x['Candidate ID'],rank:x._rank,studentName:x['Student Name'],applicationNo:x['Application No'],rollNumber:x['Roll Number'],fatherName:x["Father's Name"],mobile:x.Mobile,marks:Number(x.Marks)||0,maxMarks:max,percentage:x._pct,status:x._status,trade:x.Trade,jobRole:x['Job Role'],tieBreaker:x['Tie Breaker']})),seats,seatsFilled:rows.filter(x=>x._status==='Selected').length,vacant:Math.max(0,seats-rows.filter(x=>x._status==='Selected').length)};
+}
+function admissionSaveTest_(pin,d){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();d=d||{};const sh=sheet_(SHEETS.admissionTests),h=headers_(sh),rows=values_(sh),id=norm_(d.id)||admissionId_('TEST'),ii=h.indexOf('Test ID'),idx=rows.findIndex(r=>norm_(r[ii])===id);const seats=Math.max(0,parseInt(d.totalSeats,10)||0),max=Math.max(1,Number(d.maxMarks)||100);const vals=[id,new Date(),norm_(d.academicYear),norm_(d.class),norm_(d.trade),norm_(d.jobRole),norm_(d.testDate),seats,max,norm_(d.selectionRule)||'Highest marks / merit rank',norm_(d.status)||'Open',norm_(d.notes)];if(idx>=0)sh.getRange(idx+2,1,1,h.length).setValues([vals]);else sh.appendRow(vals);audit_('ADMISSION_TEST_SAVE',id+' / '+norm_(d.trade));return {id};}
+function admissionDeleteTest_(pin,id){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();const tid=norm_(id);if(!tid)throw new Error('Test ID required.');[SHEETS.admissionCandidates,SHEETS.admissionMerit,SHEETS.admissionSelected].forEach(n=>{const sh=sheet_(n),h=headers_(sh),idx=h.indexOf('Test ID'),rows=values_(sh);for(let i=rows.length-1;i>=0;i--)if(norm_(rows[i][idx])===tid)sh.deleteRow(i+2);});const sh=sheet_(SHEETS.admissionTests),h=headers_(sh),rows=values_(sh),idx=rows.findIndex(r=>norm_(r[h.indexOf('Test ID')])===tid);if(idx<0)throw new Error('Admission test not found.');sh.deleteRow(idx+2);audit_('ADMISSION_TEST_DELETE',tid);return true;}
+function admissionSaveCandidate_(pin,d){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();d=d||{};const tid=norm_(d.testId);if(!tid)throw new Error('Select an admission test.');const tests=admissionTestList_(pin),t=tests.find(x=>norm_(x['Test ID'])===tid);if(!t)throw new Error('Admission test not found.');const name=norm_(d.studentName),app=norm_(d.applicationNo);if(!name||!app)throw new Error('Application No. and Student Name are required.');const max=Number(t['Max Marks'])||100,marks=Number(d.marks);if(!Number.isFinite(marks)||marks<0||marks>max)throw new Error('Marks must be between 0 and '+max+'.');const sh=sheet_(SHEETS.admissionCandidates),h=headers_(sh),rows=values_(sh),id=norm_(d.id)||admissionId_('CAND'),ii=h.indexOf('Candidate ID'),idx=rows.findIndex(r=>norm_(r[ii])===id);const vals=[id,new Date(),tid,norm_(t['Academic Year']),norm_(t.Class),norm_(t.Trade),norm_(t['Job Role']),app,norm_(d.rollNumber),name,norm_(d.fatherName),norm_(d.mobile),marks,max,'', '', 'Pending',Number(d.tieBreaker)||0,norm_(d.notes)];if(idx>=0)sh.getRange(idx+2,1,1,h.length).setValues([vals]);else sh.appendRow(vals);const result=admissionRebuildMerit_(tid);audit_('ADMISSION_CANDIDATE_SAVE',name+' / '+tid);return result;}
+function admissionDeleteCandidate_(pin,id){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();const sh=sheet_(SHEETS.admissionCandidates),h=headers_(sh),rows=values_(sh),ii=h.indexOf('Candidate ID'),idx=rows.findIndex(r=>norm_(r[ii])===norm_(id));if(idx<0)throw new Error('Candidate not found.');const tid=norm_(rows[idx][h.indexOf('Test ID')]);const data=obj_(h,rows[idx]);sheet_(SHEETS.deleted).appendRow([new Date(),Utilities.getUuid(),'Admission Candidate',JSON.stringify(data)]);sh.deleteRow(idx+2);const result=admissionRebuildMerit_(tid);audit_('ADMISSION_CANDIDATE_DELETE',id);return result;}
+function admissionMerit_(pin,testId){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();return admissionRebuildMerit_(norm_(testId));}
 function route_(action,d){
   switch(action){
     case 'setup': setup_(); return {status:'ready',sheetId:ss_().getId(),sheetUrl:ss_().getUrl(),adminPinSet:!!prop_('ADMIN_PIN'),schoolName:prop_('SCHOOL_NAME')||'Govt. Sandipani HSS School Damoh'};
@@ -627,6 +663,13 @@ function route_(action,d){
     case 'internshipSave': return internshipSave_(d.pin,d.data||d);
     case 'internshipDelete': return internshipDelete_(d.pin,d.id);
     case 'industrySyncStudent': return industrySyncStudent_(d);
+    case 'admissionTests': return admissionTestList_(d.pin);
+    case 'admissionCandidates': return admissionCandidates_(d.pin,d.testId);
+    case 'admissionTestSave': return admissionSaveTest_(d.pin,d.data||d);
+    case 'admissionTestDelete': return admissionDeleteTest_(d.pin,d.id);
+    case 'admissionCandidateSave': return admissionSaveCandidate_(d.pin,d.data||d);
+    case 'admissionCandidateDelete': return admissionDeleteCandidate_(d.pin,d.id);
+    case 'admissionMerit': return admissionMerit_(d.pin,d.testId);
     default: throw new Error('Unknown action: '+action);
   }
 }
