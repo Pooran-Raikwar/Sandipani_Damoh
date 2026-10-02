@@ -63,3 +63,7 @@ body{background:#f7f9fc;overflow-x:hidden}
 @media(max-width:600px){.wait-card{padding:22px}.file-progress{bottom:12px}.admission-signatures{gap:12px}.admission-signatures div{min-width:0;flex:1}.admission-signatures div:last-child{text-align:right}}
 /* Central Admin workspace loading state */
 .central-frame-loading{padding:14px 16px;margin:0 0 10px;border:1px solid #dbe7f6;background:#f5f9ff;color:#1458a8;border-radius:12px;font-weight:800;text-align:center}
+/* Student vocational hub: five direct-access services */
+.vocational-five{grid-template-columns:repeat(5,1fr)}
+@media(max-width:1100px){.vocational-five{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.vocational-five{grid-template-columns:1fr}}
