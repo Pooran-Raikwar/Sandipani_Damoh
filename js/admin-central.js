@@ -20,14 +20,14 @@
         practical:'practical-lab.html',
         quizPublic:'quiz.html',
         skillPublic:'skill-passport.html',
-        gallery:'gallery-manager.html?embedded=1&central=1',
-        books:'admin-advanced.html?embedded=1&central=1#resources',
-        content:'admin-advanced.html?embedded=1&central=1#notice',
-        staff:'admin-advanced.html?embedded=1&central=1#staff',
-        documents:'admin-advanced.html?embedded=1&central=1#docs',
-        marks:'marks-entry.html?embedded=1&central=1',
-        results:'results.html?embedded=1',
-        quiz:'quiz-admin.html?embedded=1&central=1'
+        gallery:'gallery-manager.html?embedded=1&central=1&v=25',
+        books:'admin-advanced.html?embedded=1&central=1&v=25#resources',
+        content:'admin-advanced.html?embedded=1&central=1&v=25#notice',
+        staff:'admin-advanced.html?embedded=1&central=1&v=25#staff',
+        documents:'admin-advanced.html?embedded=1&central=1&v=25#docs',
+        marks:'marks-entry.html?embedded=1&central=1&v=25',
+        results:'results.html?embedded=1&v=25',
+        quiz:'quiz-admin.html?embedded=1&central=1&v=25'
       };
       if(!urls[module])return;
       workspace.classList.remove('hidden');
