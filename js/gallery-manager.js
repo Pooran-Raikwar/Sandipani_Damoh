@@ -61,7 +61,7 @@ async function load(){
 
   document.querySelectorAll('.manager-card [data-id]').forEach(b=>b.onclick=async()=>{
     if(!confirm('Delete this gallery photo?'))return;
-    try{await call('galleryDelete',{pin:PIN,id:b.dataset.id});await load();}catch(e){alert(e.message);}
+    try{await API.deleteGallery(PIN || (window.AdminAuth&&AdminAuth.get()) || '',b.dataset.id);await load();}catch(e){alert(e.message);}
   });
   document.querySelectorAll('.manager-card [data-edit]').forEach(b=>b.onclick=()=>editGallery(b.dataset.edit));
 }
@@ -72,7 +72,7 @@ async function editGallery(id){
   if(title===null && !f)return;
   const data={}; if(title!==null && title.trim())data.title=title.trim();
   if(f){const prepared=await fileToBase64_(f);Object.assign(data,prepared);}
-  try{await call('galleryUpdate',{pin:PIN,id,data});await load();}catch(e){alert(e.message);}
+  try{await API.updateGallery(PIN || (window.AdminAuth&&AdminAuth.get()) || '',id,data);await load();}catch(e){alert(e.message);}
 }
 function chooseImage_(){return new Promise(resolve=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>resolve(i.files[0]||null);i.click();});}
 function fileToBase64_(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve({base64:r.result,mimeType:f.type,fileName:f.name});r.onerror=reject;r.readAsDataURL(f);});}
@@ -86,7 +86,7 @@ async function bootGalleryAdmin(){
     await load();
   }catch(e){msg('loginMsg',e.message,'error');}
 }
-$('loginBtn').onclick=()=>location.href='admin.html';
+$('loginBtn').onclick=()=>location.href='admin.html?auth=required';
 
 
 document.addEventListener('DOMContentLoaded',bootGalleryAdmin);
@@ -107,22 +107,23 @@ $('uploadBtn').onclick=async()=>{
   reader.onload=async()=>{
     try{
       $('uploadBtn').disabled=true;
-      $('uploadBtn').textContent='Uploading…';
+      $('uploadBtn').textContent='⏳ Uploading…';
+      msg('status','Preparing secure upload…','info');
 
-      await call('galleryUpload',{
-        pin:PIN,
-        data:{
-          category:$('category').value,
-          title:$('title').value.trim(),
-          mimeType:f.type,
-          base64:reader.result
-        }
+      const pincode=PIN || (window.AdminAuth&&AdminAuth.get()) || '';
+      if(!pincode) throw new Error('Admin session expired. Please return to Admin Panel and unlock it once.');
+      await API.uploadGallery(pincode,{
+        category:$('category').value,
+        title:$('title').value.trim(),
+        mimeType:f.type,
+        fileName:f.name,
+        base64:reader.result
       });
 
       $('title').value='';
       $('file').value='';
       $('preview').classList.add('hidden');
-      msg('status','Photo uploaded successfully.','success');
+      msg('status','✓ Photo uploaded successfully.','success');
       await load();
     }catch(e){
       msg('status',e.message,'error');

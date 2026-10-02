@@ -52,7 +52,7 @@ async function loadGalleryAdmin(){
   const rows=await API.getGallery();
   const labels={guest:'Guest Lectures',industrial:'Industrial Visit',classroom:'Class Room Teaching',activities:'Student Activities'};
   const box=$('galleryAdminRows'); if(!box)return;
-  box.innerHTML=(rows||[]).map(x=>`<tr><td>${esc(labels[x.section]||x.section)}</td><td>${esc(x.title)}</td><td><img src="${esc(x.thumbnailUrl||x.url)}" style="width:90px;height:60px;object-fit:cover;border-radius:8px"></td><td><button class="mini danger" onclick="deleteGalleryPhoto('${esc(x.id)}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="4">No uploaded photos yet.</td></tr>';
+  box.innerHTML=(rows||[]).map(x=>{const section=x.section??x.Section??'';const title=x.title??x.Title??'';const url=x.thumbnailUrl??x['Image URL']??x.url??'';const id=x.id??x.ID??'';return `<tr><td>${esc(labels[section]||section)}</td><td>${esc(title)}</td><td>${url?`<img src="${esc(url)}" style="width:90px;height:60px;object-fit:cover;border-radius:8px">`:'—'}</td><td><button class="mini danger" onclick="deleteGalleryPhoto('${esc(id)}')">Delete</button></td></tr>`;}).join('')||'<tr><td colspan="4">No uploaded photos yet.</td></tr>';
 }
 async function uploadGalleryPhoto(){
   const file=$('galleryFile')?.files?.[0], section=$('gallerySection')?.value, title=$('galleryTitle')?.value.trim(), status=$('galleryUploadStatus');
@@ -62,7 +62,7 @@ async function uploadGalleryPhoto(){
   status.textContent='Preparing photo…';status.className='message';status.style.display='block';
   try{
     const prepared=await prepareGalleryImage_(file);
-    await API.uploadGallery(adminPin,{section,title,name:prepared.name,mimeType:prepared.mimeType,base64:prepared.base64});
+    await API.uploadGallery(adminPin || (window.AdminAuth&&AdminAuth.get()) || '',{section,title,name:prepared.name,mimeType:prepared.mimeType,base64:prepared.base64});
     status.textContent='Photo uploaded successfully.';status.className='message success';
     $('galleryFile').value='';$('galleryTitle').value='';await loadGalleryAdmin();
   }catch(e){status.textContent=e.message||'Photo upload failed.';status.className='message error';}
@@ -90,7 +90,7 @@ function prepareGalleryImage_(file){
     img.src=url;
   });
 }
-async function deleteGalleryPhoto(id){if(!confirm('Delete this gallery photo?'))return;try{await API.deleteGallery(adminPin,id);msg('Gallery photo deleted.','success');await loadGalleryAdmin();}catch(e){msg(e.message,'error');}}
+async function deleteGalleryPhoto(id){if(!confirm('Delete this gallery photo?'))return;try{await API.deleteGallery(adminPin || (window.AdminAuth&&AdminAuth.get()) || '',id);msg('Gallery photo deleted.','success');await loadGalleryAdmin();}catch(e){msg(e.message,'error');}}
 
 // Admin Automation Center: all bundled automation tools open inside the authenticated panel.
 function openAutomation(title,url){

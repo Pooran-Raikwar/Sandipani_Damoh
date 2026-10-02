@@ -13,18 +13,23 @@
       if(module==='admission'){showTab('admission'); return;}
       if(module==='settings'){showTab('settings'); return;}
       const urls={
-        gallery:'gallery-manager.html?embedded=1',
-        books:'admin-advanced.html?embedded=1#resources',
-        content:'admin-advanced.html?embedded=1#notice',
-        staff:'admin-advanced.html?embedded=1#staff',
-        documents:'admin-advanced.html?embedded=1#docs',
-        marks:'marks-entry.html?embedded=1',
+        gallery:'gallery-manager.html?embedded=1&central=1',
+        books:'admin-advanced.html?embedded=1&central=1#resources',
+        content:'admin-advanced.html?embedded=1&central=1#notice',
+        staff:'admin-advanced.html?embedded=1&central=1#staff',
+        documents:'admin-advanced.html?embedded=1&central=1#docs',
+        marks:'marks-entry.html?embedded=1&central=1',
         results:'results.html?embedded=1',
-        quiz:'quiz-admin.html?embedded=1'
+        quiz:'quiz-admin.html?embedded=1&central=1'
       };
       if(!urls[module])return;
       workspace.classList.remove('hidden');
-      frame.src=urls[module];
+      frame.src='about:blank';
+      const loader=workspace.querySelector('.central-frame-loading');
+      if(loader) loader.classList.remove('hidden');
+      frame.onload=()=>{if(loader) loader.classList.add('hidden');};
+      frame.onerror=()=>{if(loader){loader.classList.remove('hidden');loader.textContent='Module could not be loaded. Please refresh the Admin Panel.';}};
+      setTimeout(()=>{frame.src=urls[module];},30);
       workspace.scrollIntoView({behavior:'smooth',block:'start'});
     },
     close(){
