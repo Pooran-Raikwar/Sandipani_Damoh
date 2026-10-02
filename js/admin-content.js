@@ -1,7 +1,7 @@
 (function(){'use strict';
 const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 let type='learningCourses', cache=[];
-function pin(){return window.adminPin||localStorage.getItem('sandipani_admin_pin')||sessionStorage.getItem('sandipani_admin_pin')||''}
+function pin(){return (window.AdminAuth&&AdminAuth.get&&AdminAuth.get())||window.adminPin||''}
 function setStatus(t,ok=true){const e=$('contentStatus');if(e){e.textContent=t;e.className='message '+(ok?'success':'error');}}
 const configs={
  learningCourses:{title:'📚 Learning Hub Courses',fields:[['id','ID','text'],['class','Class','select:9th|10th|11th|12th'],['trade','Trade','select:IT-ITeS|Agriculture'],['medium','Medium','text'],['icon','Icon','text'],['level','Level','text'],['title','Course Title','text'],['description','Description','textarea'],['active','Active','select:Yes|No']],cols:['Class','Trade','Title','Level','Active']},

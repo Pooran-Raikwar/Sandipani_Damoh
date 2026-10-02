@@ -25,7 +25,8 @@ const API = (() => {
     getConfig:()=>call('config'),
     registerStudent:data=>call('register',{data}),
 
-    verifyAdmin:pin=>call('verifyAdmin',{pin}),
+    verifyAdmin:credential=>call('verifyAdmin',{pin:credential}),
+    createAdminSession:pin=>call('createAdminSession',{pin}),
     getStats:(pin,filters)=>call('stats',{pin,filters}),
     getStudents:(pin,filters)=>call('students',{pin,filters}),
     updateStudent:(pin,row,data)=>call('updateStudent',{pin,row,data}),
@@ -133,6 +134,12 @@ const API = (() => {
     deleteContent:(pin,type,id)=>call('contentDelete',{pin,type,id}),
 
     getAdmissionTests:pin=>call('admissionTests',{pin}),
+    getAdmissionPublicTests:()=>call('admissionPublicTests'),
+    getAdmissionPublicTest:testId=>call('admissionPublicTest',{testId}),
+    submitAdmissionTest:data=>call('admissionSubmit',{data}),
+    getAdmissionQuestions:(pin,testId)=>call('admissionQuestions',{pin,testId}),
+    saveAdmissionQuestion:(pin,data)=>call('admissionQuestionSave',{pin,data}),
+    deleteAdmissionQuestion:(pin,id)=>call('admissionQuestionDelete',{pin,id}),
     getAdmissionCandidates:(pin,testId)=>call('admissionCandidates',{pin,testId}),
     saveAdmissionTest:(pin,data)=>call('admissionTestSave',{pin,data}),
     deleteAdmissionTest:(pin,id)=>call('admissionTestDelete',{pin,id}),
