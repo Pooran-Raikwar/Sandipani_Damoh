@@ -7,7 +7,7 @@
  */
 const PROP = PropertiesService.getScriptProperties();
 const DEFAULT_PIN = '87654300';
-const SHEETS = { students:'Students', marks:'Marks', settings:'FormSettings', config:'AppConfig', deleted:'Deleted Records', audit:'Audit Log', gallery:'Gallery', books:'Books', notes:'Notes', notices:'Notices', guestLectures:'Guest Lectures', applications:'Applications', staff:'Staff', documents:'Documents', siteMedia:'Site Media' };
+const SHEETS = { students:'Students', marks:'Marks', settings:'FormSettings', config:'AppConfig', deleted:'Deleted Records', audit:'Audit Log', gallery:'Gallery', books:'Books', notes:'Notes', notices:'Notices', guestLectures:'Guest Lectures', applications:'Applications', staff:'Staff', documents:'Documents', siteMedia:'Site Media', skillPassport:'Skill Passport', skillVerifications:'Skill Verifications', certificates:'Skill Certificates', portfolio:'Student Portfolio', industryPartners:'Industry Partners', industryActivities:'Industry Activities', guestAttendance:'Guest Lecture Attendance', visitAttendance:'Industrial Visit Attendance', internships:'Internships' };
 const STUDENT_HEADERS = [
   'Timestamp','Academic Year','Class','Section','Roll Number','Student Name',"Father's Name",'Medium','Gender','Mobile Number','Samagra ID',
   'Trade','Job Role','Stream','IT Subject Opted in Place of This Language','Additional Subject','Status'
@@ -38,6 +38,13 @@ const CORE_FIELDS = [
 const MARK_HEADERS=['Timestamp','Student Row','Subject','Theory','Practical','Max','Total','Grade','Remarks'];
 const DELETED_HEADERS=['Deleted At','Record ID','Record Type','Data JSON'];
 const AUDIT_HEADERS=['Timestamp','Action','Actor','Details'];
+const SKILL_HEADERS=['ID','Updated At','Academic Year','Class','Roll Number','Student Name','Trade','Skill Name','Level','Verified','Verified By','Verified At','Evidence','Notes'];
+const CERT_HEADERS=['Certificate ID','Issued At','Academic Year','Class','Roll Number','Student Name','Trade','Certificate Title','Skill/Competency','Level','Issued By','Valid Until','Verification Status','Notes'];
+const PORTFOLIO_HEADERS=['ID','Created At','Academic Year','Class','Roll Number','Student Name','Type','Title','Description','Date','Verified','Verified By','Evidence URL','Notes'];
+const PARTNER_HEADERS=['Partner ID','Created At','Organization','Type','Contact Person','Phone','Email','Location','Industry/Domain','Status','Notes'];
+const ACTIVITY_HEADERS=['Activity ID','Created At','Activity Type','Title','Academic Year','Class','Trade','Date','Partner ID','Partner/Guest','Topic/Role','Duration','Objective','Learning Outcomes','Status','Evidence URL','Notes'];
+const ATTEND_HEADERS=['Record ID','Created At','Activity ID','Academic Year','Class','Roll Number','Student Name','Attendance','Participation','Learning Outcome','Verified','Verified By','Notes'];
+const INTERNSHIP_HEADERS=['Internship ID','Created At','Academic Year','Class','Roll Number','Student Name','Trade','Organization','Role','Mentor','Start Date','End Date','Duration','Status','Skills Learned','Certificate ID','Evidence URL','Verified','Verified By','Notes'];
 
 // -------------------- GALLERY --------------------
 const GALLERY_HEADERS=['ID','Uploaded At','Section','Title','File Name','File ID','Image URL'];
@@ -86,7 +93,16 @@ function setup_(){
   ensureSheet_(SHEETS.applications,APPLICATION_HEADERS);
   ensureSheet_(SHEETS.staff,STAFF_HEADERS);
   ensureSheet_(SHEETS.documents,DOCUMENT_HEADERS);
+  ensureSheet_(SHEETS.industryPartners,PARTNER_HEADERS);
+  ensureSheet_(SHEETS.industryActivities,ACTIVITY_HEADERS);
+  ensureSheet_(SHEETS.guestAttendance,ATTEND_HEADERS);
+  ensureSheet_(SHEETS.visitAttendance,ATTEND_HEADERS);
+  ensureSheet_(SHEETS.internships,INTERNSHIP_HEADERS);
   ensureSheet_(SHEETS.siteMedia,SITE_MEDIA_HEADERS);
+  ensureSheet_(SHEETS.skillPassport,SKILL_HEADERS);
+  ensureSheet_(SHEETS.skillVerifications,['Skill ID','Updated At','Academic Year','Class','Roll Number','Student Name','Skill Name','Level','Status','Verified By','Verified At','Evidence','Notes']);
+  ensureSheet_(SHEETS.certificates,CERT_HEADERS);
+  ensureSheet_(SHEETS.portfolio,PORTFOLIO_HEADERS);
 
   const fs=sheet_(SHEETS.settings);
   const last=fs.getLastRow();
@@ -424,6 +440,21 @@ function documentUpload_(pin,d){if(!verify_(pin))throw new Error('Invalid Admin 
 
 
 
+
+// -------------------- INDUSTRY CONNECT / WORK-BASED LEARNING --------------------
+function industryList_(pin,type,filters){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();filters=filters||{};let sh=sheet_(type),h=headers_(sh),rows=values_(sh).map(r=>obj_(h,r));const q=norm_(filters.search).toLowerCase();if(q)rows=rows.filter(o=>JSON.stringify(o).toLowerCase().includes(q));return rows.reverse();}
+function industrySave_(pin,type,data,headers){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();data=data||{};const sh=sheet_(type),h=headers_(sh),key=headers[0],id=norm_(data.id)||Utilities.getUuid(),rows=values_(sh),ii=h.indexOf(key),idx=rows.findIndex(r=>norm_(r[ii])===id);let vals;
+ if(type===SHEETS.industryPartners) vals=[id,new Date(),norm_(data.organization),norm_(data.partnerType),norm_(data.contactPerson),norm_(data.phone),norm_(data.email),norm_(data.location),norm_(data.domain),norm_(data.status)||'Active',norm_(data.notes)];
+ else if(type===SHEETS.industryActivities) vals=[id,new Date(),norm_(data.activityType),norm_(data.title),norm_(data.academicYear),norm_(data.class),norm_(data.trade),norm_(data.date),norm_(data.partnerId),norm_(data.partnerGuest),norm_(data.topicRole),norm_(data.duration),norm_(data.objective),norm_(data.learningOutcomes),norm_(data.status)||'Planned',norm_(data.evidenceUrl),norm_(data.notes)];
+ else vals=[id,new Date(),norm_(data.activityId),norm_(data.academicYear),norm_(data.class),norm_(data.roll),norm_(data.name),norm_(data.attendance)||'Present',norm_(data.participation),norm_(data.learningOutcome),bool_(data.verified)?'Yes':'No',norm_(data.verifiedBy),norm_(data.notes)];
+ if(idx>=0)sh.getRange(idx+2,1,1,vals.length).setValues([vals]);else sh.appendRow(vals);audit_('INDUSTRY_SAVE',type+' / '+id);return id;}
+function industryDelete_(pin,type,id){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();const sh=sheet_(type),h=headers_(sh),rows=values_(sh),ii=h.indexOf(h[0]),idx=rows.findIndex(r=>norm_(r[ii])===norm_(id));if(idx<0)throw new Error('Record not found.');sh.deleteRow(idx+2);audit_('INDUSTRY_DELETE',type+' / '+id);return true;}
+function internshipList_(pin,filters){return industryList_(pin,SHEETS.internships,filters);}
+function internshipSave_(pin,d){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();d=d||{};const sh=sheet_(SHEETS.internships),h=headers_(sh),id=norm_(d.id)||Utilities.getUuid(),rows=values_(sh),ii=h.indexOf('Internship ID'),idx=rows.findIndex(r=>norm_(r[ii])===id);const vals=[id,new Date(),norm_(d.academicYear),norm_(d.class),norm_(d.roll),norm_(d.name),norm_(d.trade),norm_(d.organization),norm_(d.role),norm_(d.mentor),norm_(d.startDate),norm_(d.endDate),norm_(d.duration),norm_(d.status)||'Applied',norm_(d.skillsLearned),norm_(d.certificateId),norm_(d.evidenceUrl),bool_(d.verified)?'Yes':'No',norm_(d.verifiedBy),norm_(d.notes)];if(idx>=0)sh.getRange(idx+2,1,1,vals.length).setValues([vals]);else sh.appendRow(vals);audit_('INTERNSHIP_SAVE',id);return id;}
+function internshipDelete_(pin,id){return industryDelete_(pin,SHEETS.internships,id);}
+function industryDashboard_(pin){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();const count=n=>values_(sheet_(n)).length;return {partners:count(SHEETS.industryPartners),activities:count(SHEETS.industryActivities),guestAttendance:count(SHEETS.guestAttendance),visitAttendance:count(SHEETS.visitAttendance),internships:count(SHEETS.internships),verifiedInternships:values_(sheet_(SHEETS.internships)).filter(r=>String(r[17]).toLowerCase()==='yes').length};}
+function industrySyncStudent_(d){setup_();d=d||{};const ay=norm_(d.academicYear),cl=norm_(d.class),roll=norm_(d.roll),name=norm_(d.name).toLowerCase();const match=o=>(!ay||norm_(o['Academic Year'])===ay)&&(!cl||norm_(o.Class)===cl)&&(!roll||norm_(o['Roll Number'])===roll)&&(!name||norm_(o['Student Name']).toLowerCase()===name);const acts=values_(sheet_(SHEETS.industryActivities)).map(r=>obj_(headers_(sheet_(SHEETS.industryActivities)),r));const ins=values_(sheet_(SHEETS.internships)).map(r=>obj_(headers_(sheet_(SHEETS.internships)),r));const ga=values_(sheet_(SHEETS.guestAttendance)).map(r=>obj_(headers_(sheet_(SHEETS.guestAttendance)),r)).filter(match);const va=values_(sheet_(SHEETS.visitAttendance)).map(r=>obj_(headers_(sheet_(SHEETS.visitAttendance)),r)).filter(match);return {activities:acts.filter(a=>ga.concat(va).some(x=>norm_(x['Activity ID'])===norm_(a['Activity ID']))),guestAttendance:ga,visitAttendance:va,internships:ins.filter(match)};}
+
 // -------------------- REAL AI ASSISTANT (OPENAI RESPONSES API) --------------------
 // IMPORTANT: Store OPENAI_API_KEY in Apps Script > Project Settings > Script Properties.
 // Never put the API key in GitHub/HTML/JavaScript.
@@ -489,6 +520,40 @@ function aiStatus_(pin){
   return {configured:!!prop_('OPENAI_API_KEY'),model:prop_('OPENAI_AI_MODEL')||AI_MODEL_DEFAULT};
 }
 
+
+function studentPublic_(d){
+  setup_(); d=d||{}; const roll=norm_(d.roll), cls=norm_(d.class||d.Class), year=norm_(d.academicYear||d['Academic Year']), name=norm_(d.name||d['Student Name']);
+  if(!roll||!cls||!year||!name) throw new Error('Academic Year, Class, Roll Number and Student Name are required.');
+  const sh=sheet_(SHEETS.students), h=headers_(sh), rows=values_(sh), ri=h.indexOf('Roll Number'), ci=h.indexOf('Class'), yi=h.indexOf('Academic Year'), ni=h.indexOf('Student Name');
+  const idx=rows.findIndex(r=>norm_(r[ri])===roll&&norm_(r[ci])===cls&&norm_(r[yi])===year&&norm_(r[ni]).toLowerCase()===name.toLowerCase());
+  if(idx<0) throw new Error('Student record not found. Check the details and try again.');
+  const r=obj_(h,rows[idx]);
+  const base={academicYear:r['Academic Year'],class:r.Class,roll:r['Roll Number'],name:r['Student Name'],medium:r.Medium,trade:r.Trade,jobRole:r['Job Role'],stream:r.Stream||''};
+  const skills=skillRows_(base); const portfolio=portfolioRows_(base); const certificates=certificateRows_(base); const industry=industrySyncStudent_(base);
+  return {student:base,skills,portfolio,certificates,industry};
+}
+function matchStudentBase_(d){
+  return {academicYear:norm_(d.academicYear||d['Academic Year']),class:norm_(d.class||d.Class),roll:norm_(d.roll||d['Roll Number']),name:norm_(d.name||d['Student Name']),trade:norm_(d.trade||d.Trade)};
+}
+function skillRows_(base){
+  const sh=sheet_(SHEETS.skillPassport),h=headers_(sh), rows=values_(sh); return rows.map(r=>obj_(h,r)).filter(x=>norm_(x['Academic Year'])===base.academicYear&&norm_(x.Class)===base.class&&norm_(x['Roll Number'])===base.roll&&norm_(x['Student Name']).toLowerCase()===base.name.toLowerCase()).map(x=>({id:x.ID,skill:x['Skill Name'],level:Number(x.Level)||0,verified:String(x.Verified).toLowerCase()==='yes',verifiedBy:x['Verified By']||'',verifiedAt:x['Verified At']||'',evidence:x.Evidence||'',notes:x.Notes||''}));
+}
+function portfolioRows_(base){
+  const sh=sheet_(SHEETS.portfolio),h=headers_(sh),rows=values_(sh); return rows.map(r=>obj_(h,r)).filter(x=>norm_(x['Academic Year'])===base.academicYear&&norm_(x.Class)===base.class&&norm_(x['Roll Number'])===base.roll&&norm_(x['Student Name']).toLowerCase()===base.name.toLowerCase()).map(x=>({id:x.ID,type:x.Type,title:x.Title,description:x.Description,date:x.Date,verified:String(x.Verified).toLowerCase()==='yes',verifiedBy:x['Verified By']||'',evidenceUrl:x['Evidence URL']||'',notes:x.Notes||''}));
+}
+function certificateRows_(base){
+  const sh=sheet_(SHEETS.certificates),h=headers_(sh),rows=values_(sh); return rows.map(r=>obj_(h,r)).filter(x=>norm_(x['Academic Year'])===base.academicYear&&norm_(x.Class)===base.class&&norm_(x['Roll Number'])===base.roll&&norm_(x['Student Name']).toLowerCase()===base.name.toLowerCase()).map(x=>({id:x['Certificate ID'],issuedAt:x['Issued At'],title:x['Certificate Title'],skill:x['Skill/Competency'],level:x.Level,issuedBy:x['Issued By'],validUntil:x['Valid Until'],status:x['Verification Status'],notes:x.Notes||''}));
+}
+function skillList_(pin,filters){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();filters=filters||{};let out=values_(sheet_(SHEETS.skillPassport)).map(r=>obj_(headers_(sheet_(SHEETS.skillPassport)),r)); const q=norm_(filters.search).toLowerCase(); return out.filter(x=>(!filters.class||norm_(x.Class)===norm_(filters.class))&&(!filters.academicYear||norm_(x['Academic Year'])===norm_(filters.academicYear))&&(!filters.verified||String(x.Verified).toLowerCase()===String(filters.verified).toLowerCase())&&(!q||[x['Student Name'],x['Roll Number'],x['Skill Name']].some(v=>norm_(v).toLowerCase().includes(q)))).reverse();}
+function skillSave_(pin,d){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();d=d||{};const b=matchStudentBase_(d), skill=norm_(d.skill||d['Skill Name']);if(!b.academicYear||!b.class||!b.roll||!b.name||!skill)throw new Error('Student and skill details are required.');const sh=sheet_(SHEETS.skillPassport),h=headers_(sh),rows=values_(sh),id=norm_(d.id)||Utilities.getUuid(),ii=h.indexOf('ID'),idx=rows.findIndex(r=>norm_(r[ii])===id);const vals=[id,new Date(),b.academicYear,b.class,b.roll,b.name,b.trade,skill,Math.max(0,Math.min(100,Number(d.level)||0)),d.verified?'Yes':'No',norm_(d.verifiedBy)||'',d.verified?new Date():'',norm_(d.evidence||''),norm_(d.notes||'')];if(idx>=0)sh.getRange(idx+2,1,1,vals.length).setValues([vals]);else sh.appendRow(vals);audit_('SKILL_SAVE',b.name+' / '+skill);return {id,verified:!!d.verified};}
+function skillDelete_(pin,id){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();const sh=sheet_(SHEETS.skillPassport),h=headers_(sh),rows=values_(sh),ii=h.indexOf('ID'),idx=rows.findIndex(r=>norm_(r[ii])===norm_(id));if(idx<0)throw new Error('Skill record not found.');sh.deleteRow(idx+2);audit_('SKILL_DELETE',id);return true;}
+function portfolioAdminList_(pin,filters){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();let out=portfolioRowsAdmin_();filters=filters||{};const q=norm_(filters.search).toLowerCase();return out.filter(x=>(!q||[x['Student Name'],x['Roll Number'],x.Title].some(v=>norm_(v).toLowerCase().includes(q)))).reverse();}
+function portfolioRowsAdmin_(){const sh=sheet_(SHEETS.portfolio),h=headers_(sh);return values_(sh).map(r=>obj_(h,r));}
+function portfolioSave_(pin,d){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();d=d||{};const b=matchStudentBase_(d),title=norm_(d.title||d.Title);if(!b.academicYear||!b.class||!b.roll||!b.name||!title)throw new Error('Student and portfolio title are required.');const sh=sheet_(SHEETS.portfolio),h=headers_(sh),rows=values_(sh),id=norm_(d.id)||Utilities.getUuid(),ii=h.indexOf('ID'),idx=rows.findIndex(r=>norm_(r[ii])===id);const vals=[id,new Date(),b.academicYear,b.class,b.roll,b.name,norm_(d.type||d.Type)||'Project',title,norm_(d.description||d.Description),norm_(d.date||d.Date),d.verified?'Yes':'No',norm_(d.verifiedBy||d['Verified By']),norm_(d.evidenceUrl||d['Evidence URL']),norm_(d.notes||d.Notes)];if(idx>=0)sh.getRange(idx+2,1,1,vals.length).setValues([vals]);else sh.appendRow(vals);return id;}
+function portfolioDelete_(pin,id){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();const sh=sheet_(SHEETS.portfolio),h=headers_(sh),rows=values_(sh),ii=h.indexOf('ID'),idx=rows.findIndex(r=>norm_(r[ii])===norm_(id));if(idx<0)throw new Error('Portfolio record not found.');sh.deleteRow(idx+2);return true;}
+function certificateList_(pin,filters){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();let out=values_(sheet_(SHEETS.certificates)).map(r=>obj_(headers_(sheet_(SHEETS.certificates)),r));const q=norm_(filters&&filters.search).toLowerCase();return out.filter(x=>!q||[x['Student Name'],x['Roll Number'],x['Certificate ID'],x['Certificate Title']].some(v=>norm_(v).toLowerCase().includes(q))).reverse();}
+function certificateIssue_(pin,d){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();d=d||{};const b=matchStudentBase_(d),title=norm_(d.title||d['Certificate Title']),skill=norm_(d.skill||d['Skill/Competency']);if(!b.academicYear||!b.class||!b.roll||!b.name||!title)throw new Error('Student and certificate title are required.');const id=norm_(d.id)||('SAND-'+new Date().getFullYear()+'-'+Utilities.getUuid().slice(0,8).toUpperCase());const sh=sheet_(SHEETS.certificates);sh.appendRow([id,new Date(),b.academicYear,b.class,b.roll,b.name,b.trade,title,skill,norm_(d.level)||'Verified',norm_(d.issuedBy)||'Vocational Teacher',norm_(d.validUntil||''),'Verified',norm_(d.notes||'')]);audit_('CERTIFICATE_ISSUED',b.name+' / '+id);return {id};}
+function certificateDelete_(pin,id){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();const sh=sheet_(SHEETS.certificates),h=headers_(sh),rows=values_(sh),ii=h.indexOf('Certificate ID'),idx=rows.findIndex(r=>norm_(r[ii])===norm_(id));if(idx<0)throw new Error('Certificate not found.');sh.deleteRow(idx+2);audit_('CERTIFICATE_DELETE',id);return true;}
 function route_(action,d){
   switch(action){
     case 'setup': setup_(); return {status:'ready',sheetId:ss_().getId(),sheetUrl:ss_().getUrl(),adminPinSet:!!prop_('ADMIN_PIN'),schoolName:prop_('SCHOOL_NAME')||'Govt. Sandipani HSS School Damoh'};
@@ -535,6 +600,33 @@ function route_(action,d){
     case 'documentUpload': return documentUpload_(d.pin,d.data||{});
     case 'aiChat': return aiChat_(d.data||d);
     case 'aiStatus': return aiStatus_(d.pin);
+    case 'skillPassportGet': return studentPublic_(d);
+    case 'skillList': return skillList_(d.pin,d.filters||{});
+    case 'skillSave': return skillSave_(d.pin,d.data||d);
+    case 'skillDelete': return skillDelete_(d.pin,d.id);
+    case 'portfolioList': return portfolioAdminList_(d.pin,d.filters||{});
+    case 'portfolioSave': return portfolioSave_(d.pin,d.data||d);
+    case 'portfolioDelete': return portfolioDelete_(d.pin,d.id);
+    case 'certificateList': return certificateList_(d.pin,d.filters||{});
+    case 'certificateIssue': return certificateIssue_(d.pin,d.data||d);
+    case 'certificateDelete': return certificateDelete_(d.pin,d.id);
+    case 'industryDashboard': return industryDashboard_(d.pin);
+    case 'industryPartners': return industryList_(d.pin,SHEETS.industryPartners,d.filters||{});
+    case 'industryPartnerSave': return industrySave_(d.pin,SHEETS.industryPartners,d.data||d,PARTNER_HEADERS);
+    case 'industryPartnerDelete': return industryDelete_(d.pin,SHEETS.industryPartners,d.id);
+    case 'industryActivities': return industryList_(d.pin,SHEETS.industryActivities,d.filters||{});
+    case 'industryActivitySave': return industrySave_(d.pin,SHEETS.industryActivities,d.data||d,ACTIVITY_HEADERS);
+    case 'industryActivityDelete': return industryDelete_(d.pin,SHEETS.industryActivities,d.id);
+    case 'guestAttendance': return industryList_(d.pin,SHEETS.guestAttendance,d.filters||{});
+    case 'guestAttendanceSave': return industrySave_(d.pin,SHEETS.guestAttendance,d.data||d,ATTEND_HEADERS);
+    case 'guestAttendanceDelete': return industryDelete_(d.pin,SHEETS.guestAttendance,d.id);
+    case 'visitAttendance': return industryList_(d.pin,SHEETS.visitAttendance,d.filters||{});
+    case 'visitAttendanceSave': return industrySave_(d.pin,SHEETS.visitAttendance,d.data||d,ATTEND_HEADERS);
+    case 'visitAttendanceDelete': return industryDelete_(d.pin,SHEETS.visitAttendance,d.id);
+    case 'internships': return internshipList_(d.pin,d.filters||{});
+    case 'internshipSave': return internshipSave_(d.pin,d.data||d);
+    case 'internshipDelete': return internshipDelete_(d.pin,d.id);
+    case 'industrySyncStudent': return industrySyncStudent_(d);
     default: throw new Error('Unknown action: '+action);
   }
 }
