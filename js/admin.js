@@ -39,7 +39,14 @@ function showTab(tab){document.querySelectorAll('[data-tab]').forEach(x=>x.class
 function saveApiUrl(){const v=$('apiUrl').value.trim();if(!/^https:\/\/script\.google\.com\/macros\/s\//i.test(v))return msg('Please enter a valid Apps Script Web App URL.','error');localStorage.setItem('sandipani_api_url',v);msg('Script URL saved securely in this browser.','success');} 
 async function connectSheet(){const ref=$('sheetRef').value.trim();if(!ref)return msg('Paste Google Sheet URL or ID first.','error');try{const d=await API.connectSheet(adminPin,ref);$('sheetRef').value=d.sheetUrl;msg('Google Sheet connection changed successfully.','success');}catch(e){msg(e.message,'error');}}
 async function setupInfo(){try{const d=await API.call('setup');$('sheetRef').value=d.sheetUrl||'';msg('Current Google Sheet opened/initialized.','success');window.open(d.sheetUrl,'_blank');}catch(e){msg(e.message,'error');}}
-document.addEventListener('DOMContentLoaded',async()=>{if(AdminAuth.isUnlocked()&&await AdminAuth.verify()){adminPin=AdminAuth.get();$('loginCard').classList.add('hidden');$('connectionCard')?.classList.remove('hidden');$('adminPanel').classList.remove('hidden');try{const c=await API.getConnectionInfo(adminPin);$('sheetRef').value=c.sheetUrl||'';}catch(e){}refreshAll();} $('adminPin')?.addEventListener('keydown',e=>{if(e.key==='Enter')adminLogin();});$('apiUrl').value=localStorage.getItem('sandipani_api_url')||DEFAULT_API_URL;});
+document.addEventListener('DOMContentLoaded',async()=>{
+  // Central Admin Panel always starts locked. A successful PIN unlocks all modules in this session; refresh/reopen requires PIN again.
+  AdminAuth.clear();
+  $('adminPanel').classList.add('hidden');$('connectionCard')?.classList.add('hidden');$('loginCard').classList.remove('hidden');
+  $('adminPin')?.addEventListener('keydown',e=>{if(e.key==='Enter')adminLogin();});
+  $('apiUrl').value=localStorage.getItem('sandipani_api_url')||DEFAULT_API_URL;
+});
+window.addEventListener('pageshow',()=>{if(!AdminAuth.isUnlocked()){$('adminPanel')?.classList.add('hidden');$('connectionCard')?.classList.add('hidden');$('loginCard')?.classList.remove('hidden');}});
 
 async function loadGalleryAdmin(){
   const rows=await API.getGallery();
