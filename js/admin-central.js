@@ -34,7 +34,15 @@
       frame.src='about:blank';
       const loader=workspace.querySelector('.central-frame-loading');
       if(loader) loader.classList.remove('hidden');
-      frame.onload=()=>{if(loader) loader.classList.add('hidden');};
+      frame.onload=()=>{
+        if(loader) loader.classList.add('hidden');
+        // Same-origin session bridge: send the already verified central PIN to embedded admin modules
+        // without putting the PIN in the URL. This keeps one-login behaviour reliable in iframe mode.
+        try{
+          const pin=window.AdminAuth&&AdminAuth.get&&AdminAuth.get();
+          if(pin) frame.contentWindow.postMessage({type:'sandipani-admin-session',pin},location.origin);
+        }catch(e){}
+      };
       frame.onerror=()=>{if(loader){loader.classList.remove('hidden');loader.textContent='Module could not be loaded. Please refresh the Admin Panel.';}};
       setTimeout(()=>{frame.src=urls[module];},30);
       workspace.scrollIntoView({behavior:'smooth',block:'start'});

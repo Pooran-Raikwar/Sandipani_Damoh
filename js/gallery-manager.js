@@ -76,16 +76,26 @@ async function editGallery(id){
 }
 function chooseImage_(){return new Promise(resolve=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>resolve(i.files[0]||null);i.click();});}
 function fileToBase64_(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve({base64:r.result,mimeType:f.type,fileName:f.name});r.onerror=reject;r.readAsDataURL(f);});}
+let galleryBooted=false;
 async function bootGalleryAdmin(){
+  if(galleryBooted)return;
   try{
     PIN=await AdminAuth.require();
     if(!PIN)return;
+    galleryBooted=true;
     if(window.SiteMedia)window.SiteMedia.setPin(PIN);
     $('login').classList.add('hidden');
     $('panel').classList.remove('hidden');
     await load();
   }catch(e){msg('loginMsg',e.message,'error');}
 }
+window.addEventListener('message',async ev=>{
+  if(ev.origin!==location.origin)return;
+  const d=ev.data||{};
+  if(d.type!=='sandipani-admin-session'||!d.pin)return;
+  try{AdminAuth.set(String(d.pin));}catch(e){}
+  await bootGalleryAdmin();
+});
 $('loginBtn').onclick=()=>location.href='admin.html?auth=required';
 
 

@@ -9,7 +9,7 @@ window.AdminAuth={
   isEmbedded(){return new URLSearchParams(location.search).get('embedded')==='1' || (window.parent&&window.parent!==window);},
   isUnlocked(){
     const p=this.get();
-    const ok=localStorage.getItem(this.flag)==='1'||sessionStorage.getItem(this.flag)==='1'||(window.parent&&window.parent!==window&&window.parent.AdminAuth&&window.parent.AdminAuth.isUnlocked());
+    const ok=!!p && (localStorage.getItem(this.flag)==='1'||sessionStorage.getItem(this.flag)==='1'||(window.parent&&window.parent!==window&&window.parent.AdminAuth&&window.parent.AdminAuth.isUnlocked()));
     if(!p||!ok){this.clear();return false;}
     this.touch();
     return true;
@@ -17,7 +17,7 @@ window.AdminAuth={
   async verify(){
     if(!this.isUnlocked())return false;
     const p=this.get();
-    try{const r=await API.verifyAdmin(p);if(r.valid){this.touch();return true;}this.clear();return false;}catch(e){return false;}
+    try{const r=await API.verifyAdmin(p);if(r.valid){this.touch();return true;}this.clear();return false;}catch(e){window.__ADMIN_AUTH_ERROR=e;return false;}
   },
   async require(){
     if(await this.verify())return this.get();
