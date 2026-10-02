@@ -53,8 +53,7 @@
         <div class="profile-photo-wrap">
           <img id="profilePhoto" src="images/teacher-profile.jpg" data-site-image="teacher-profile" alt="Pooran Raikwar">
           <div id="photoFallback" class="photo-fallback">PR</div>
-          <label class="photo-edit" for="photoInput" title="Change photo">✦ Change Photo</label>
-          <input id="photoInput" type="file" accept="image/*" hidden>
+          <span class="photo-edit" title="Managed from Admin → Gallery Manager">✦ PROFILE</span>
         </div>
         <div class="profile-name">
           <small>VOCATIONAL IT EDUCATOR</small>
@@ -158,23 +157,6 @@
   </section>
 </main>
 
-<script>
-(function(){
-  const input=document.getElementById('photoInput');
-  const img=document.getElementById('profilePhoto');
-  const fallback=document.getElementById('photoFallback');
-  input.addEventListener('change',function(){
-    const file=this.files && this.files[0];
-    if(!file) return;
-    const reader=new FileReader();
-    reader.onload=e=>{
-      img.src=e.target.result;
-      img.style.display='block';
-      fallback.style.display='none';
-    };
-    reader.readAsDataURL(file);
-  });
-})();
-</script>
-<script src="js/features.js"></script><script src="js/site-media-public.js"></script></body>
+
+<script src="js/loading-ui.js"></script><script src="js/features.js"></script><script src="js/site-media-public.js"></script></body>
 </html>
