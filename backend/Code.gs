@@ -7,7 +7,7 @@
  */
 const PROP = PropertiesService.getScriptProperties();
 const DEFAULT_PIN = '87654300';
-const SHEETS = { admissionTests:'Admission Tests', admissionCandidates:'Admission Test Candidates', admissionMerit:'Admission Merit List', admissionSelected:'Admission Selected Students', students:'Students', marks:'Marks', settings:'FormSettings', config:'AppConfig', deleted:'Deleted Records', audit:'Audit Log', gallery:'Gallery', books:'Books', notes:'Notes', notices:'Notices', guestLectures:'Guest Lectures', applications:'Applications', staff:'Staff', documents:'Documents', siteMedia:'Site Media', skillPassport:'Skill Passport', skillVerifications:'Skill Verifications', certificates:'Skill Certificates', portfolio:'Student Portfolio', industryPartners:'Industry Partners', industryActivities:'Industry Activities', guestAttendance:'Guest Lecture Attendance', visitAttendance:'Industrial Visit Attendance', internships:'Internships' };
+const SHEETS = { learningCourses:'Learning Courses', learningLessons:'Learning Lessons', practicalModules:'Practical Modules', quizBank:'Quiz Bank', admissionTests:'Admission Tests', admissionCandidates:'Admission Test Candidates', admissionMerit:'Admission Merit List', admissionSelected:'Admission Selected Students', students:'Students', marks:'Marks', settings:'FormSettings', config:'AppConfig', deleted:'Deleted Records', audit:'Audit Log', gallery:'Gallery', books:'Books', notes:'Notes', notices:'Notices', guestLectures:'Guest Lectures', applications:'Applications', staff:'Staff', documents:'Documents', siteMedia:'Site Media', skillPassport:'Skill Passport', skillVerifications:'Skill Verifications', certificates:'Skill Certificates', portfolio:'Student Portfolio', industryPartners:'Industry Partners', industryActivities:'Industry Activities', guestAttendance:'Guest Lecture Attendance', visitAttendance:'Industrial Visit Attendance', internships:'Internships' };
 const STUDENT_HEADERS = [
   'Timestamp','Academic Year','Class','Section','Roll Number','Student Name',"Father's Name",'Medium','Gender','Mobile Number','Samagra ID',
   'Trade','Job Role','Stream','IT Subject Opted in Place of This Language','Additional Subject','Status'
@@ -48,6 +48,10 @@ const INTERNSHIP_HEADERS=['Internship ID','Created At','Academic Year','Class','
 const ADMISSION_TEST_HEADERS=['Test ID','Created At','Academic Year','Class','Trade','Job Role','Test Date','Total Seats','Max Marks','Selection Rule','Status','Notes'];
 const ADMISSION_CANDIDATE_HEADERS=['Candidate ID','Created At','Test ID','Academic Year','Class','Trade','Job Role','Application No','Roll Number','Student Name',"Father's Name",'Mobile','Marks','Max Marks','Percentage','Rank','Status','Tie Breaker','Notes'];
 const ADMISSION_MERIT_HEADERS=['Rank','Candidate ID','Test ID','Academic Year','Class','Trade','Job Role','Application No','Roll Number','Student Name',"Father's Name",'Mobile','Marks','Max Marks','Percentage','Status','Tie Breaker','Updated At'];
+const LEARNING_COURSE_HEADERS=['ID','Updated At','Class','Trade','Medium','Icon','Level','Title','Description','Active'];
+const LEARNING_LESSON_HEADERS=['ID','Updated At','Course ID','Order','Code','Title','Content','Active'];
+const PRACTICAL_HEADERS=['ID','Updated At','Module','Title','Description','Duration','Instructions','Active'];
+const QUIZ_HEADERS=['ID','Updated At','Class','Trade','Unit','Mode','Time','Question','Option A','Option B','Option C','Option D','Correct','Explanation','Active'];
 const ADMISSION_SELECTED_HEADERS=['Selection ID','Selected At','Test ID','Rank','Candidate ID','Academic Year','Class','Trade','Job Role','Application No','Roll Number','Student Name',"Father's Name",'Mobile','Marks','Max Marks','Percentage','Status'];
 
 // -------------------- GALLERY --------------------
@@ -84,6 +88,7 @@ function obj_(h,r){const o={};h.forEach((k,i)=>o[k]=r[i]===undefined?'':r[i]);re
 function ensureSheet_(name,headers){const ss=ss_();let sh=ss.getSheetByName(name);if(!sh)sh=ss.insertSheet(name);const cur=headers_(sh);if(!cur.length)sh.getRange(1,1,1,headers.length).setValues([headers]);else headers.forEach(h=>{if(cur.indexOf(h)<0)sh.getRange(1,sh.getLastColumn()+1).setValue(h);});sh.setFrozenRows(1);return sh;}
 
 function setup_(){
+  ensureSheet_(SHEETS.learningCourses,LEARNING_COURSE_HEADERS); ensureSheet_(SHEETS.learningLessons,LEARNING_LESSON_HEADERS); ensureSheet_(SHEETS.practicalModules,PRACTICAL_HEADERS); ensureSheet_(SHEETS.quizBank,QUIZ_HEADERS);
   ensureSheet_(SHEETS.students,STUDENT_HEADERS);
   ensureSheet_(SHEETS.marks,MARK_HEADERS);
   ensureSheet_(SHEETS.settings,['Field','Type','Options','Required','Enabled','Only Classes','System','Section']);
@@ -590,6 +595,18 @@ function admissionDeleteTest_(pin,id){if(!verify_(pin))throw new Error('Invalid 
 function admissionSaveCandidate_(pin,d){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();d=d||{};const tid=norm_(d.testId);if(!tid)throw new Error('Select an admission test.');const tests=admissionTestList_(pin),t=tests.find(x=>norm_(x['Test ID'])===tid);if(!t)throw new Error('Admission test not found.');const name=norm_(d.studentName),app=norm_(d.applicationNo);if(!name||!app)throw new Error('Application No. and Student Name are required.');const max=Number(t['Max Marks'])||100,marks=Number(d.marks);if(!Number.isFinite(marks)||marks<0||marks>max)throw new Error('Marks must be between 0 and '+max+'.');const sh=sheet_(SHEETS.admissionCandidates),h=headers_(sh),rows=values_(sh),id=norm_(d.id)||admissionId_('CAND'),ii=h.indexOf('Candidate ID'),idx=rows.findIndex(r=>norm_(r[ii])===id);const vals=[id,new Date(),tid,norm_(t['Academic Year']),norm_(t.Class),norm_(t.Trade),norm_(t['Job Role']),app,norm_(d.rollNumber),name,norm_(d.fatherName),norm_(d.mobile),marks,max,'', '', 'Pending',Number(d.tieBreaker)||0,norm_(d.notes)];if(idx>=0)sh.getRange(idx+2,1,1,h.length).setValues([vals]);else sh.appendRow(vals);const result=admissionRebuildMerit_(tid);audit_('ADMISSION_CANDIDATE_SAVE',name+' / '+tid);return result;}
 function admissionDeleteCandidate_(pin,id){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();const sh=sheet_(SHEETS.admissionCandidates),h=headers_(sh),rows=values_(sh),ii=h.indexOf('Candidate ID'),idx=rows.findIndex(r=>norm_(r[ii])===norm_(id));if(idx<0)throw new Error('Candidate not found.');const tid=norm_(rows[idx][h.indexOf('Test ID')]);const data=obj_(h,rows[idx]);sheet_(SHEETS.deleted).appendRow([new Date(),Utilities.getUuid(),'Admission Candidate',JSON.stringify(data)]);sh.deleteRow(idx+2);const result=admissionRebuildMerit_(tid);audit_('ADMISSION_CANDIDATE_DELETE',id);return result;}
 function admissionMerit_(pin,testId){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();return admissionRebuildMerit_(norm_(testId));}
+
+function contentRows_(name){setup_(); const sh=sheet_(name),h=headers_(sh); return values_(sh).map(r=>obj_(h,r));}
+function contentSave_(pin,name,headers,data){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();data=data||{};const sh=sheet_(name),h=headers_(sh);const id=norm_(data.id)||('CNT-'+Utilities.getUuid().slice(0,8));const rows=values_(sh),ii=h.indexOf('ID'),idx=rows.findIndex(r=>norm_(r[ii])===id);let vals;
+ if(name===SHEETS.learningCourses) vals=[id,new Date(),norm_(data.class),norm_(data.trade),norm_(data.medium)||'Hindi|English',norm_(data.icon)||'📘',norm_(data.level)||'Skill',norm_(data.title),norm_(data.description),data.active===false?'No':'Yes'];
+ else if(name===SHEETS.learningLessons) vals=[id,new Date(),norm_(data.courseId),Number(data.order)||1,norm_(data.code)||String(Number(data.order)||1).padStart(2,'0'),norm_(data.title),norm_(data.content),data.active===false?'No':'Yes'];
+ else if(name===SHEETS.practicalModules) vals=[id,new Date(),norm_(data.module),norm_(data.title),norm_(data.description),norm_(data.duration),norm_(data.instructions),data.active===false?'No':'Yes'];
+ else vals=[id,new Date(),norm_(data.class),norm_(data.trade),norm_(data.unit),norm_(data.mode)||'practice',Number(data.time)||0,norm_(data.question),norm_(data.optionA),norm_(data.optionB),norm_(data.optionC),norm_(data.optionD),Math.max(0,Math.min(3,Number(data.correct)||0)),norm_(data.explanation),data.active===false?'No':'Yes'];
+ if(idx>=0)sh.getRange(idx+2,1,1,h.length).setValues([vals]);else sh.appendRow(vals);audit_('CONTENT_SAVE',name+' / '+id);return {ok:true,id};}
+function contentDelete_(pin,name,id){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();const sh=sheet_(name),h=headers_(sh),rows=values_(sh),ii=h.indexOf('ID'),idx=rows.findIndex(r=>norm_(r[ii])===norm_(id));if(idx<0)throw new Error('Record not found.');sheet_(SHEETS.deleted).appendRow([new Date(),Utilities.getUuid(),'Content '+name,JSON.stringify(obj_(h,rows[idx]))]);sh.deleteRow(idx+2);audit_('CONTENT_DELETE',name+' / '+id);return {ok:true};}
+function learningPublic_(){const courses=contentRows_(SHEETS.learningCourses).filter(x=>String(x.Active).toLowerCase()!=='no');const lessons=contentRows_(SHEETS.learningLessons).filter(x=>String(x.Active).toLowerCase()!=='no');return {courses:courses.map(c=>Object.assign(c,{lessons:lessons.filter(l=>norm_(l['Course ID'])===norm_(c.ID)).sort((a,b)=>Number(a.Order)-Number(b.Order))}))};}
+function practicalPublic_(){return {modules:contentRows_(SHEETS.practicalModules).filter(x=>String(x.Active).toLowerCase()!=='no')};}
+function quizPublic_(){return {questions:contentRows_(SHEETS.quizBank).filter(x=>String(x.Active).toLowerCase()!=='no')};}
 function route_(action,d){
   switch(action){
     case 'setup': setup_(); return {status:'ready',sheetId:ss_().getId(),sheetUrl:ss_().getUrl(),adminPinSet:!!prop_('ADMIN_PIN'),schoolName:prop_('SCHOOL_NAME')||'Govt. Sandipani HSS School Damoh'};
@@ -663,6 +680,15 @@ function route_(action,d){
     case 'internshipSave': return internshipSave_(d.pin,d.data||d);
     case 'internshipDelete': return internshipDelete_(d.pin,d.id);
     case 'industrySyncStudent': return industrySyncStudent_(d);
+    case 'learningPublic': return learningPublic_();
+    case 'practicalPublic': return practicalPublic_();
+    case 'quizPublic': return quizPublic_();
+    case 'learningCourses': return contentRows_(SHEETS.learningCourses);
+    case 'learningLessons': return contentRows_(SHEETS.learningLessons);
+    case 'practicalModules': return contentRows_(SHEETS.practicalModules);
+    case 'quizBank': return contentRows_(SHEETS.quizBank);
+    case 'contentSave': return contentSave_(d.pin,d.type,d.headers||[],d.data||d);
+    case 'contentDelete': return contentDelete_(d.pin,d.type,d.id);
     case 'admissionTests': return admissionTestList_(d.pin);
     case 'admissionCandidates': return admissionCandidates_(d.pin,d.testId);
     case 'admissionTestSave': return admissionSaveTest_(d.pin,d.data||d);
