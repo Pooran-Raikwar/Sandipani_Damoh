@@ -7,7 +7,7 @@
  */
 const PROP = PropertiesService.getScriptProperties();
 const DEFAULT_PIN = '87654300';
-const SHEETS = { learningCourses:'Learning Courses', learningLessons:'Learning Lessons', practicalModules:'Practical Modules', quizBank:'Quiz Bank', admissionTests:'Admission Tests', admissionCandidates:'Admission Test Candidates', admissionMerit:'Admission Merit List', admissionSelected:'Admission Selected Students', students:'Students', marks:'Marks', settings:'FormSettings', config:'AppConfig', deleted:'Deleted Records', audit:'Audit Log', gallery:'Gallery', books:'Books', notes:'Notes', notices:'Notices', guestLectures:'Guest Lectures', applications:'Applications', staff:'Staff', documents:'Documents', siteMedia:'Site Media', skillPassport:'Skill Passport', skillVerifications:'Skill Verifications', certificates:'Skill Certificates', portfolio:'Student Portfolio', industryPartners:'Industry Partners', industryActivities:'Industry Activities', guestAttendance:'Guest Lecture Attendance', visitAttendance:'Industrial Visit Attendance', internships:'Internships' };
+const SHEETS = { learningCourses:'Learning Courses', learningLessons:'Learning Lessons', practicalModules:'Practical Modules', quizBank:'Quiz Bank', admissionTests:'Admission Tests', admissionCandidates:'Admission Test Candidates', admissionMerit:'Admission Merit List', admissionSelected:'Admission Selected Students', admissionQuestions:'Admission Questions', students:'Students', marks:'Marks', settings:'FormSettings', config:'AppConfig', deleted:'Deleted Records', audit:'Audit Log', gallery:'Gallery', books:'Books', notes:'Notes', notices:'Notices', guestLectures:'Guest Lectures', applications:'Applications', staff:'Staff', documents:'Documents', siteMedia:'Site Media', skillPassport:'Skill Passport', skillVerifications:'Skill Verifications', certificates:'Skill Certificates', portfolio:'Student Portfolio', industryPartners:'Industry Partners', industryActivities:'Industry Activities', guestAttendance:'Guest Lecture Attendance', visitAttendance:'Industrial Visit Attendance', internships:'Internships' };
 const STUDENT_HEADERS = [
   'Timestamp','Academic Year','Class','Section','Roll Number','Student Name',"Father's Name",'Medium','Gender','Mobile Number','Samagra ID',
   'Trade','Job Role','Stream','IT Subject Opted in Place of This Language','Additional Subject','Status'
@@ -53,6 +53,7 @@ const LEARNING_LESSON_HEADERS=['ID','Updated At','Course ID','Order','Code','Tit
 const PRACTICAL_HEADERS=['ID','Updated At','Module','Title','Description','Duration','Instructions','Active'];
 const QUIZ_HEADERS=['ID','Updated At','Class','Trade','Unit','Mode','Time','Question','Option A','Option B','Option C','Option D','Correct','Explanation','Active'];
 const ADMISSION_SELECTED_HEADERS=['Selection ID','Selected At','Test ID','Rank','Candidate ID','Academic Year','Class','Trade','Job Role','Application No','Roll Number','Student Name',"Father's Name",'Mobile','Marks','Max Marks','Percentage','Status'];
+const ADMISSION_QUESTION_HEADERS=['Question ID','Created At','Test ID','Question No','Question','Option A','Option B','Option C','Option D','Correct','Explanation','Marks','Active'];
 
 // -------------------- GALLERY --------------------
 const GALLERY_HEADERS=['ID','Uploaded At','Section','Title','File Name','File ID','Image URL'];
@@ -111,6 +112,7 @@ function setup_(){
   ensureSheet_(SHEETS.admissionCandidates,ADMISSION_CANDIDATE_HEADERS);
   ensureSheet_(SHEETS.admissionMerit,ADMISSION_MERIT_HEADERS);
   ensureSheet_(SHEETS.admissionSelected,ADMISSION_SELECTED_HEADERS);
+  ensureSheet_(SHEETS.admissionQuestions,ADMISSION_QUESTION_HEADERS);
   ensureSheet_(SHEETS.siteMedia,SITE_MEDIA_HEADERS);
   ensureSheet_(SHEETS.skillPassport,SKILL_HEADERS);
   ensureSheet_(SHEETS.skillVerifications,['Skill ID','Updated At','Academic Year','Class','Roll Number','Student Name','Skill Name','Level','Status','Verified By','Verified At','Evidence','Notes']);
@@ -161,7 +163,22 @@ function connectionInfo_(pin){
   return {sheetId:ss.getId(),sheetUrl:ss.getUrl(),apiUrl:prop_('PUBLIC_API_URL')||'',adminPinConfigured:!!prop_('ADMIN_PIN')};
 }
 function adminPin_(){return prop_('ADMIN_PIN')||DEFAULT_PIN;}
-function verify_(pin){return norm_(pin)===adminPin_();}
+function adminSessionKey_(token){return 'SANDIPANI_ADMIN_SESSION_'+norm_(token);}
+function createAdminSession_(pin){
+  if(norm_(pin)!==adminPin_())throw new Error('Invalid Admin PIN');
+  const token=Utilities.getUuid().replace(/-/g,'')+Utilities.getUuid().replace(/-/g,'');
+  const expiresAt=Date.now()+5*60*60*1000;
+  CacheService.getScriptCache().put(adminSessionKey_(token),String(expiresAt),20700);
+  return {token,expiresAt};
+}
+function verify_(credential){
+  const c=norm_(credential);
+  if(c && c!==adminPin_()){
+    const exp=Number(CacheService.getScriptCache().get(adminSessionKey_(c))||0);
+    if(exp && Date.now()<exp)return true;
+  }
+  return c===adminPin_();
+}
 function audit_(action,details){sheet_(SHEETS.audit).appendRow([new Date(),action,'Admin',details||'']);}
 function classAllowed_(only,cls){const s=norm_(only||'All');return s==='All'||s.split('|').map(norm_).indexOf(norm_(cls))>=0;}
 function settings_(){setup_();return values_(sheet_(SHEETS.settings)).map(r=>({field:norm_(r[0]),type:norm_(r[1])||'text',options:norm_(r[2]),required:bool_(r[3]),enabled:String(r[4]).toLowerCase()!=='no',onlyClasses:norm_(r[5])||'All',system:bool_(r[6]),section:norm_(r[7])||'General'}));}
@@ -596,6 +613,72 @@ function admissionSaveCandidate_(pin,d){if(!verify_(pin))throw new Error('Invali
 function admissionDeleteCandidate_(pin,id){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();const sh=sheet_(SHEETS.admissionCandidates),h=headers_(sh),rows=values_(sh),ii=h.indexOf('Candidate ID'),idx=rows.findIndex(r=>norm_(r[ii])===norm_(id));if(idx<0)throw new Error('Candidate not found.');const tid=norm_(rows[idx][h.indexOf('Test ID')]);const data=obj_(h,rows[idx]);sheet_(SHEETS.deleted).appendRow([new Date(),Utilities.getUuid(),'Admission Candidate',JSON.stringify(data)]);sh.deleteRow(idx+2);const result=admissionRebuildMerit_(tid);audit_('ADMISSION_CANDIDATE_DELETE',id);return result;}
 function admissionMerit_(pin,testId){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();return admissionRebuildMerit_(norm_(testId));}
 
+
+function admissionQuestionList_(pin,testId){
+  if(!verify_(pin))throw new Error('Invalid Admin PIN');
+  setup_(); const sh=sheet_(SHEETS.admissionQuestions),h=headers_(sh),tid=norm_(testId);
+  return values_(sh).map(r=>obj_(h,r)).filter(x=>norm_(x['Test ID'])===tid)
+    .sort((a,b)=>Number(a['Question No'])-Number(b['Question No']));
+}
+function admissionQuestionSave_(pin,d){
+  if(!verify_(pin))throw new Error('Invalid Admin PIN'); setup_(); d=d||{};
+  const tid=norm_(d.testId); if(!tid)throw new Error('Test ID required.');
+  const tests=admissionTestList_(pin), test=tests.find(x=>norm_(x['Test ID'])===tid);
+  if(!test)throw new Error('Admission test not found.');
+  const q=norm_(d.question); const opts=[d.optionA,d.optionB,d.optionC,d.optionD].map(norm_);
+  if(!q||opts.some(x=>!x))throw new Error('Question and all four options are required.');
+  const correct=Math.max(0,Math.min(3,parseInt(d.correct,10)||0));
+  const marks=Math.max(1,Number(d.marks)||1);
+  const sh=sheet_(SHEETS.admissionQuestions),h=headers_(sh),rows=values_(sh),id=norm_(d.id)||('AQ-'+Utilities.getUuid().slice(0,10));
+  const ii=h.indexOf('Question ID'),idx=rows.findIndex(r=>norm_(r[ii])===id);
+  const vals=[id,new Date(),tid,Math.max(1,parseInt(d.questionNo,10)||1),q,...opts,correct,norm_(d.explanation),marks,d.active===false?'No':'Yes'];
+  if(idx>=0)sh.getRange(idx+2,1,1,h.length).setValues([vals]); else sh.appendRow(vals);
+  audit_('ADMISSION_QUESTION_SAVE',id+' / '+tid); return {id};
+}
+function admissionQuestionDelete_(pin,id){
+  if(!verify_(pin))throw new Error('Invalid Admin PIN'); setup_();
+  const sh=sheet_(SHEETS.admissionQuestions),h=headers_(sh),rows=values_(sh),ii=h.indexOf('Question ID');
+  const idx=rows.findIndex(r=>norm_(r[ii])===norm_(id)); if(idx<0)throw new Error('Question not found.');
+  sh.deleteRow(idx+2); audit_('ADMISSION_QUESTION_DELETE',id); return {ok:true};
+}
+function admissionPublicTests_(){
+  setup_(); const tests=contentRows_(SHEETS.admissionTests).filter(x=>norm_(x.Status).toLowerCase()==='open');
+  const qsh=sheet_(SHEETS.admissionQuestions),qh=headers_(qsh),qr=values_(qsh);
+  return tests.map(t=>{
+    const qs=qr.map(r=>obj_(qh,r)).filter(q=>norm_(q['Test ID'])===norm_(t['Test ID'])&&String(q.Active).toLowerCase()!=='no');
+    return {testId:t['Test ID'],academicYear:t['Academic Year'],class:t.Class,trade:t.Trade,jobRole:t['Job Role'],testDate:t['Test Date'],maxMarks:Number(t['Max Marks'])||100,totalSeats:Number(t['Total Seats'])||0,questionCount:qs.length,notes:t.Notes||''};
+  }).filter(x=>x.questionCount>0);
+}
+function admissionPublicTest_(testId){
+  setup_(); const tid=norm_(testId),tests=contentRows_(SHEETS.admissionTests),t=tests.find(x=>norm_(x['Test ID'])===tid);
+  if(!t||norm_(t.Status).toLowerCase()!=='open')throw new Error('This admission test is currently closed.');
+  const sh=sheet_(SHEETS.admissionQuestions),h=headers_(sh),rows=values_(sh);
+  const questions=rows.map(r=>obj_(h,r)).filter(q=>norm_(q['Test ID'])===tid&&String(q.Active).toLowerCase()!=='no')
+    .sort((a,b)=>Number(a['Question No'])-Number(b['Question No']))
+    .map(q=>({id:q['Question ID'],no:Number(q['Question No'])||1,question:q.Question,options:[q['Option A'],q['Option B'],q['Option C'],q['Option D']],marks:Number(q.Marks)||1}));
+  if(!questions.length)throw new Error('Questions are not available yet.');
+  return {testId:t['Test ID'],academicYear:t['Academic Year'],class:t.Class,trade:t.Trade,jobRole:t['Job Role'],testDate:t['Test Date'],maxMarks:Number(t['Max Marks'])||100,totalSeats:Number(t['Total Seats'])||0,notes:t.Notes||'',questions};
+}
+function admissionSubmit_(d){
+  setup_(); d=d||{}; const tid=norm_(d.testId),test=admissionPublicTest_(tid);
+  const name=norm_(d.studentName),father=norm_(d.fatherName),mobile=norm_(d.mobile);
+  if(!name||!father||!/^\d{10}$/.test(mobile))throw new Error('Student name, father name and valid 10-digit mobile are required.');
+  const answers=d.answers||{}, qsh=sheet_(SHEETS.admissionQuestions),qh=headers_(qsh),qr=values_(qsh);
+  const qmap={}; qr.map(r=>obj_(qh,r)).filter(q=>norm_(q['Test ID'])===tid&&String(q.Active).toLowerCase()!=='no').forEach(q=>qmap[q['Question ID']]=q);
+  let marks=0,answered=0; Object.keys(qmap).forEach(id=>{const q=qmap[id],a=Number(answers[id]);if(Number.isInteger(a)){answered++;if(a===Number(q.Correct))marks+=Number(q.Marks)||1;}});
+  const maxConfigured=Number(test.maxMarks)||100, actualMax=Object.values(qmap).reduce((sum,q)=>sum+(Number(q.Marks)||1),0);
+  const max=Math.max(1,Math.min(maxConfigured,actualMax||maxConfigured));
+  if(marks>max)marks=max;
+  const sh=sheet_(SHEETS.admissionCandidates),h=headers_(sh),existing=values_(sh);
+  const mobileCol=h.indexOf('Mobile'),nameCol=h.indexOf('Student Name'),testCol=h.indexOf('Test ID');
+  if(existing.some(r=>norm_(r[testCol])===tid&&norm_(r[mobileCol])===mobile&&norm_(r[nameCol]).toLowerCase()===name.toLowerCase()))throw new Error('A submission for this student and mobile number already exists for this test.');
+  const app='ADM-'+new Date().getTime().toString(36).toUpperCase()+'-'+Math.floor(Math.random()*900+100);
+  const vals=['CAND-'+Utilities.getUuid().slice(0,8),new Date(),tid,test.academicYear,test.class,test.trade,test.jobRole,app,norm_(d.rollNumber),name,father,mobile,marks,max,'','','Pending',0,'Online Admission Test'];
+  sh.appendRow(vals); const result=admissionRebuildMerit_(tid); const me=result.merit.find(x=>x.applicationNo===app)||{};
+  audit_('ADMISSION_ONLINE_SUBMIT',name+' / '+tid);
+  return {applicationNo:app,marks,maxMarks:max,percentage:max?Math.round(marks/max*10000)/100:0,rank:me.rank||'',status:me.status||'Pending',answered,totalQuestions:Object.keys(qmap).length};
+}
+
 function contentRows_(name){setup_(); const sh=sheet_(name),h=headers_(sh); return values_(sh).map(r=>obj_(h,r));}
 function contentSave_(pin,name,headers,data){if(!verify_(pin))throw new Error('Invalid Admin PIN');setup_();data=data||{};const sh=sheet_(name),h=headers_(sh);const id=norm_(data.id)||('CNT-'+Utilities.getUuid().slice(0,8));const rows=values_(sh),ii=h.indexOf('ID'),idx=rows.findIndex(r=>norm_(r[ii])===id);let vals;
  if(name===SHEETS.learningCourses) vals=[id,new Date(),norm_(data.class),norm_(data.trade),norm_(data.medium)||'Hindi|English',norm_(data.icon)||'📘',norm_(data.level)||'Skill',norm_(data.title),norm_(data.description),data.active===false?'No':'Yes'];
@@ -616,6 +699,7 @@ function route_(action,d){
     case 'settings': return settings_();
     case 'config': return config_();
     case 'verifyAdmin': return {valid:verify_(d.pin)};
+    case 'createAdminSession': return createAdminSession_(d.pin);
     case 'register': return registerStudent(d.data||{});
     case 'students': return getStudents(d.pin,d.filters||{});
     case 'stats': return getStats(d.pin,d.filters||{});
@@ -689,6 +773,12 @@ function route_(action,d){
     case 'quizBank': return contentRows_(SHEETS.quizBank);
     case 'contentSave': return contentSave_(d.pin,d.type,d.headers||[],d.data||d);
     case 'contentDelete': return contentDelete_(d.pin,d.type,d.id);
+    case 'admissionPublicTests': return admissionPublicTests_();
+    case 'admissionPublicTest': return admissionPublicTest_(d.testId);
+    case 'admissionSubmit': return admissionSubmit_(d.data||d);
+    case 'admissionQuestions': return admissionQuestionList_(d.pin,d.testId);
+    case 'admissionQuestionSave': return admissionQuestionSave_(d.pin,d.data||d);
+    case 'admissionQuestionDelete': return admissionQuestionDelete_(d.pin,d.id);
     case 'admissionTests': return admissionTestList_(d.pin);
     case 'admissionCandidates': return admissionCandidates_(d.pin,d.testId);
     case 'admissionTestSave': return admissionSaveTest_(d.pin,d.data||d);
