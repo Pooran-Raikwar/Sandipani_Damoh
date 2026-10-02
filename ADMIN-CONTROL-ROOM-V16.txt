@@ -1,7 +1,12 @@
-V16 CENTRAL ADMIN CONTROL ROOM
+V17 CENTRAL ADMIN CONTROL ROOM
 - One Admin PIN for all admin categories.
 - Sub-admin pages redirect to central admin when opened directly.
 - Embedded modules reuse the parent Admin session.
 - Gallery, Teacher Profile/School Logo and Books/Notes use the same verified PIN.
 - Upload UI includes preparation/upload status and blocks duplicate clicks.
 - Backend Code.gs includes gallery/site-media/resource routes; redeploy latest Code.gs as the same Web App deployment after uploading this package.
+
+- Admin PIN is exchanged once for a short-lived server-side session token; the PIN itself is not persisted in browser storage.
+- Admission Test is student-facing: Admin can Open/Close tests, manage questions, and student submissions are scored and stored in Admission Test Candidates.
+- Admission Questions sheet is created automatically by Code.gs setup_.
+- Frontend API URL updated to the supplied Apps Script Web App endpoint.
