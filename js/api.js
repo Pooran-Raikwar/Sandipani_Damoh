@@ -59,6 +59,7 @@ const API = (() => {
           section,
           title:d.title || '',
           mimeType:d.mimeType || 'image/jpeg',
+          fileName:d.fileName || d.name || '',
           base64:d.base64 || ''
         }
       });

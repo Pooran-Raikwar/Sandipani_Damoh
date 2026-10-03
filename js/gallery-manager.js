@@ -84,8 +84,9 @@ async function bootGalleryAdmin(){
     if(!PIN)return;
     galleryBooted=true;
     if(window.SiteMedia)window.SiteMedia.setPin(PIN);
-    $('login').classList.add('hidden');
-    $('panel').classList.remove('hidden');
+    const nativeMode=!!$('nativeGalleryPanel');
+    if(nativeMode){ $('nativeGalleryLogin')?.classList.add('hidden'); $('nativeGalleryPanel')?.classList.remove('hidden'); }
+    else { $('login')?.classList.add('hidden'); $('panel')?.classList.remove('hidden'); }
     await load();
   }catch(e){msg('loginMsg',e.message,'error');}
 }
@@ -99,7 +100,7 @@ window.addEventListener('message',async ev=>{
 $('loginBtn').onclick=()=>location.href='admin.html?auth=required';
 
 
-document.addEventListener('DOMContentLoaded',bootGalleryAdmin);
+window.bootGalleryAdmin=bootGalleryAdmin;if(document.body&&document.body.classList.contains('gallery-manager'))document.addEventListener('DOMContentLoaded',bootGalleryAdmin);
 
 $('file').onchange=()=>{
   const f=$('file').files[0];
