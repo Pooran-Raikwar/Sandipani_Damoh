@@ -168,16 +168,27 @@ function createAdminSession_(pin){
   if(norm_(pin)!==adminPin_())throw new Error('Invalid Admin PIN');
   const token=Utilities.getUuid().replace(/-/g,'')+Utilities.getUuid().replace(/-/g,'');
   const expiresAt=Date.now()+5*60*60*1000;
-  CacheService.getScriptCache().put(adminSessionKey_(token),String(expiresAt),20700);
+  // Keep the active session server-side in Script Properties rather than CacheService.
+  // CacheService can evict entries early, which was causing valid admin modules to
+  // randomly report "session expired" while the browser still had a valid token.
+  const props=PropertiesService.getScriptProperties();
+  props.setProperty('ADMIN_SESSION_TOKEN',token);
+  props.setProperty('ADMIN_SESSION_EXPIRY',String(expiresAt));
   return {token,expiresAt};
 }
 function verify_(credential){
   const c=norm_(credential);
-  if(c && c!==adminPin_()){
-    const exp=Number(CacheService.getScriptCache().get(adminSessionKey_(c))||0);
-    if(exp && Date.now()<exp)return true;
+  if(c===adminPin_())return true;
+  if(!c)return false;
+  const props=PropertiesService.getScriptProperties();
+  const token=norm_(props.getProperty('ADMIN_SESSION_TOKEN'));
+  const exp=Number(props.getProperty('ADMIN_SESSION_EXPIRY')||0);
+  if(token && c===token && exp && Date.now()<exp)return true;
+  if(token && exp && Date.now()>=exp){
+    props.deleteProperty('ADMIN_SESSION_TOKEN');
+    props.deleteProperty('ADMIN_SESSION_EXPIRY');
   }
-  return c===adminPin_();
+  return false;
 }
 function audit_(action,details){sheet_(SHEETS.audit).appendRow([new Date(),action,'Admin',details||'']);}
 function classAllowed_(only,cls){const s=norm_(only||'All');return s==='All'||s.split('|').map(norm_).indexOf(norm_(cls))>=0;}
