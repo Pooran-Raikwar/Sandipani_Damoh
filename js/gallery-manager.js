@@ -61,7 +61,9 @@ async function load(){
 
   document.querySelectorAll('.manager-card [data-id]').forEach(b=>b.onclick=async()=>{
     if(!confirm('Delete this gallery photo?'))return;
-    try{await API.deleteGallery(PIN || (window.AdminAuth&&AdminAuth.get()) || '',b.dataset.id);await load();}catch(e){alert(e.message);}
+    try{await API.deleteGallery(PIN || (window.AdminAuth&&AdminAuth.get()) || '',b.dataset.id);setTimeout(() => {
+  load().catch(e => console.warn('Gallery list load failed:', e));
+}, 0);}catch(e){alert(e.message);}
   });
   document.querySelectorAll('.manager-card [data-edit]').forEach(b=>b.onclick=()=>editGallery(b.dataset.edit));
 }
