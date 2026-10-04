@@ -87,5 +87,56 @@ function runScript(root,prefix,key,src,funcs){
     );
   }
 }
-function mount(key){const item=AUTO.find(x=>x.key===key);if(!item)return;const host=document.getElementById('nativeAutomationHost');if(!host)return;host.innerHTML='';const root=document.createElement('div');root.className='native-auto-tool';root.dataset.tool=key;root.innerHTML=item.styles+item.markup;host.appendChild(root);runScript(root,item.prefix,key,item.js,item.funcs);root.querySelectorAll('[onclick]').forEach(el=>{let s=el.getAttribute('onclick');s=s.replace(/\b([A-Za-z_$][\w$]*)\s*\(/g,(m,n)=>window.__nativeAuto[key+'_'+n]?'window.__nativeAuto[\"'+key+'_'+n+'\"](':m);el.setAttribute('onclick',s);});host.scrollIntoView({behavior:'smooth',block:'start'});}
+function mount(key){
+  const item=AUTO.find(x=>x.key===key);
+  if(!item)return;
+  const host=document.getElementById('nativeAutomationHost');
+  if(!host)return;
+
+  host.innerHTML='';
+
+  const root=document.createElement('div');
+  root.className='native-auto-tool';
+  root.dataset.tool=key;
+
+  /*
+   * The five automation templates use compact markers so their original
+   * standalone HTML can be embedded safely in this single-page admin area:
+   *   \1someId\2                         -> id="<prefix>someId"
+   *   \1window.__nativeAuto[... ]()\2   -> onclick="..."
+   *
+   * V25 was mounting the raw markers. The browser therefore never created
+   * the expected IDs and the automation scripts received null elements.
+   */
+  const markup=String(item.markup||'').replace(/\\1([\s\S]*?)\\2/g,function(_,value){
+    const v=String(value||'').trim();
+    if(v.indexOf('window.__nativeAuto')===0){
+      return 'onclick="'+v.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'"';
+    }
+    const id=v.replace(/^#/, '');
+    const fullId=id.indexOf(String(item.prefix||''))===0 ? id : String(item.prefix||'')+id;
+    return 'id="'+fullId+'"';
+  });
+
+  root.innerHTML=String(item.styles||'')+markup;
+  host.appendChild(root);
+
+  runScript(root,item.prefix,key,item.js,item.funcs);
+
+  /*
+   * Some templates use normal function names in onclick attributes. Resolve
+   * those names to the functions captured from the isolated script scope.
+   */
+  root.querySelectorAll('[onclick]').forEach(el=>{
+    let s=el.getAttribute('onclick')||'';
+    s=s.replace(/\b([A-Za-z_$][\w$]*)\s*\(/g,function(m,n){
+      return window.__nativeAuto[key+'_'+n]
+        ? 'window.__nativeAuto["'+key+'_'+n+'"]('
+        : m;
+    });
+    el.setAttribute('onclick',s);
+  });
+
+  host.scrollIntoView({behavior:'smooth',block:'start'});
+}
 window.NativeAutomation={open:mount};})();

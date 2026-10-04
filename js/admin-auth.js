@@ -1,52 +1,43 @@
-/* Central Admin Session v4 — one PIN creates a server session token shared by all admin modules. */
+/* Central Admin Session — browser session only; leaving Admin clears the client token. */
 window.AdminAuth={
   key:'sandipani_admin_session',
   expiryKey:'sandipani_admin_session_expiry',
-  storage:localStorage,
+  storage:sessionStorage,
   set(token,expiresAt){
     if(!token)return;
     const exp=Number(expiresAt||0);
-    localStorage.setItem(this.key,String(token));
-    localStorage.setItem(this.expiryKey,String(exp));
-    sessionStorage.setItem(this.key,String(token));
-    sessionStorage.setItem(this.expiryKey,String(exp));
+    this.storage.setItem(this.key,String(token));
+    this.storage.setItem(this.expiryKey,String(exp));
   },
   get(){
     try{
-      const own=localStorage.getItem(this.key)||sessionStorage.getItem(this.key)||'';
-      if(own)return own;
-      if(window.parent&&window.parent!==window&&window.parent.AdminAuth&&window.parent.AdminAuth.get){
-        return window.parent.AdminAuth.get()||'';
-      }
-    }catch(e){}
-    return '';
+      return this.storage.getItem(this.key)||'';
+    }catch(e){return '';}
   },
   getExpiry(){
-    const a=Number(localStorage.getItem(this.expiryKey)||0);
-    const b=Number(sessionStorage.getItem(this.expiryKey)||0);
-    if(a||b)return Math.max(a,b);
-    try{
-      if(window.parent&&window.parent!==window&&window.parent.AdminAuth&&window.parent.AdminAuth.getExpiry){
-        return Number(window.parent.AdminAuth.getExpiry()||0);
-      }
-    }catch(e){}
-    return 0;
+    try{return Number(this.storage.getItem(this.expiryKey)||0);}catch(e){return 0;}
   },
   clear(){
-    [localStorage,sessionStorage].forEach(s=>{s.removeItem(this.key);s.removeItem(this.expiryKey);});
+    try{this.storage.removeItem(this.key);this.storage.removeItem(this.expiryKey);}catch(e){}
+    /* Remove tokens left by older V25 builds. */
+    try{localStorage.removeItem(this.key);localStorage.removeItem(this.expiryKey);}catch(e){}
   },
   touch(expiresAt){
     const t=Number(expiresAt)||Date.now()+5*60*60*1000;
-    localStorage.setItem(this.expiryKey,String(t));
-    sessionStorage.setItem(this.expiryKey,String(t));
+    this.storage.setItem(this.expiryKey,String(t));
   },
   isEmbedded(){return new URLSearchParams(location.search).get('embedded')==='1' || (window.parent&&window.parent!==window);},
+  isUnlocked(){
+    const token=this.get();
+    const exp=this.getExpiry();
+    if(!token)return false;
+    if(exp&&Date.now()>exp){this.clear();return false;}
+    return true;
+  },
   async verify(){
     const token=this.get();
     const exp=this.getExpiry();
     if(!token || (exp && Date.now()>exp)){this.clear();return false;}
-    /* In an embedded module, ask the already-unlocked parent first. This avoids
-       a second login and also keeps the server-side session as the authority. */
     try{
       if(window.parent&&window.parent!==window&&window.parent.AdminAuth&&window.parent.AdminAuth!==this){
         const parentAuth=window.parent.AdminAuth;

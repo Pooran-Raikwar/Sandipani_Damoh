@@ -40,6 +40,8 @@ function saveApiUrl(){const v=$('apiUrl').value.trim();if(!/^https:\/\/script\.g
 async function connectSheet(){const ref=$('sheetRef').value.trim();if(!ref)return msg('Paste Google Sheet URL or ID first.','error');try{const d=await API.connectSheet(adminPin,ref);$('sheetRef').value=d.sheetUrl;msg('Google Sheet connection changed successfully.','success');}catch(e){msg(e.message,'error');}}
 async function setupInfo(){try{const d=await API.call('setup');$('sheetRef').value=d.sheetUrl||'';msg('Current Google Sheet opened/initialized.','success');window.open(d.sheetUrl,'_blank');}catch(e){msg(e.message,'error');}}
 document.addEventListener('DOMContentLoaded',async()=>{
+  /* Never trust a legacy persistent token from older builds. */
+  try{localStorage.removeItem('sandipani_admin_session');localStorage.removeItem('sandipani_admin_session_expiry');}catch(e){}
   $('adminPanel').classList.add('hidden');$('connectionCard')?.classList.add('hidden');$('loginCard').classList.remove('hidden');
   $('adminPin')?.addEventListener('keydown',e=>{if(e.key==='Enter')adminLogin();});
   $('apiUrl').value=localStorage.getItem('sandipani_api_url')||DEFAULT_API_URL;
@@ -50,7 +52,14 @@ document.addEventListener('DOMContentLoaded',async()=>{
     await refreshAll();
   }
 });
-window.addEventListener('pageshow',()=>{if(!AdminAuth.isUnlocked()){$('adminPanel')?.classList.add('hidden');$('connectionCard')?.classList.add('hidden');$('loginCard')?.classList.remove('hidden');}});
+window.addEventListener('pagehide',()=>{AdminAuth.clear();adminPin='';});
+window.addEventListener('pageshow',async()=>{
+  if(!AdminAuth.isUnlocked()){
+    $('adminPanel')?.classList.add('hidden');
+    $('connectionCard')?.classList.add('hidden');
+    $('loginCard')?.classList.remove('hidden');
+  }
+});
 
 async function loadGalleryAdmin(){
   const rows=await API.getGallery();
