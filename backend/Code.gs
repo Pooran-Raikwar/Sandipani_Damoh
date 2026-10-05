@@ -803,3 +803,374 @@ function route_(action,d){
 function api_(e){try{const d=Object.assign({},e&&e.parameter||{},body_(e));if(typeof d.filters==='string')d.filters=JSON.parse(d.filters);if(typeof d.data==='string')d.data=JSON.parse(d.data);if(typeof d.settings==='string')d.settings=JSON.parse(d.settings);if(typeof d.config==='string')d.config=JSON.parse(d.config);return json_({ok:true,data:route_(norm_(d.action),d)});}catch(err){return json_({ok:false,error:String(err&&err.message||err)});}}
 function doPost(e){return api_(e);}
 function doGet(e){if(e&&e.parameter&&e.parameter.action)return api_(e);return json_({ok:true,data:{status:'online',message:'Sandipani vocational backend is running.'}});}
+/* =========================================================
+   ADMISSION TEST - STUDENT DETAILS EXTENSION
+   Paste this block at the VERY END of Code.gs
+   ========================================================= */
+
+(function () {
+  'use strict';
+
+  /*
+   * Make sure Medium and Stream columns exist in the existing
+   * Admission Test Candidates sheet.
+   */
+  function admissionEnsureStudentDetailColumns_() {
+    setup_();
+
+    const sh = sheet_(SHEETS.admissionCandidates);
+    const h = headers_(sh);
+
+    if (h.indexOf('Medium') < 0) {
+      sh.getRange(1, sh.getLastColumn() + 1).setValue('Medium');
+    }
+
+    if (h.indexOf('Stream') < 0) {
+      sh.getRange(1, sh.getLastColumn() + 1).setValue('Stream');
+    }
+
+    return sh;
+  }
+
+
+  /*
+   * Extended online admission submission.
+   *
+   * This replaces the old admissionSubmit_ function because
+   * the existing API route already calls admissionSubmit_().
+   */
+  function admissionSubmit_(d) {
+
+    admissionEnsureStudentDetailColumns_();
+
+    d = d || {};
+
+    const tid = norm_(d.testId);
+    const test = admissionPublicTest_(tid);
+
+    const name = norm_(d.studentName);
+    const father = norm_(d.fatherName);
+    const mobile = norm_(d.mobile);
+    const rollNumber = norm_(d.rollNumber);
+    const medium = norm_(d.medium);
+    const stream = norm_(d.stream);
+
+    /*
+     * Basic validation
+     */
+    if (!name) {
+      throw new Error('Student name is required.');
+    }
+
+    if (!father) {
+      throw new Error("Father's name is required.");
+    }
+
+    if (!/^\d{10}$/.test(mobile)) {
+      throw new Error('Please enter a valid 10-digit mobile number.');
+    }
+
+    /*
+     * Medium validation
+     */
+    if (medium !== 'Hindi' && medium !== 'English') {
+      throw new Error('Please select Hindi or English medium.');
+    }
+
+    /*
+     * Class comes from the admission test itself.
+     * Student cannot change it from the submission payload.
+     */
+    const studentClass = norm_(test.class);
+
+    /*
+     * Stream is required ONLY for Class 11th and 12th.
+     */
+    const higherClass =
+      studentClass === '11th' ||
+      studentClass === '12th';
+
+    const validStreams = [
+      'Mathematics',
+      'Biology',
+      'Arts',
+      'Commerce'
+    ];
+
+    if (higherClass) {
+
+      if (!stream) {
+        throw new Error(
+          'Please select your stream for Class 11th/12th.'
+        );
+      }
+
+      if (validStreams.indexOf(stream) < 0) {
+        throw new Error(
+          'Invalid stream selected.'
+        );
+      }
+
+    }
+
+    /*
+     * For 9th and 10th, stream must remain blank.
+     */
+    const finalStream = higherClass ? stream : '';
+
+
+    /*
+     * Calculate marks
+     */
+    const answers = d.answers || {};
+
+    const qsh = sheet_(SHEETS.admissionQuestions);
+    const qh = headers_(qsh);
+    const qr = values_(qsh);
+
+    const qmap = {};
+
+    qr
+      .map(function (r) {
+        return obj_(qh, r);
+      })
+      .filter(function (q) {
+        return (
+          norm_(q['Test ID']) === tid &&
+          String(q.Active).toLowerCase() !== 'no'
+        );
+      })
+      .forEach(function (q) {
+        qmap[q['Question ID']] = q;
+      });
+
+
+    let marks = 0;
+    let answered = 0;
+
+    Object.keys(qmap).forEach(function (id) {
+
+      const q = qmap[id];
+      const answer = Number(answers[id]);
+
+      if (Number.isInteger(answer)) {
+
+        answered++;
+
+        if (answer === Number(q.Correct)) {
+          marks += Number(q.Marks) || 1;
+        }
+      }
+    });
+
+
+    const maxConfigured =
+      Number(test.maxMarks) || 100;
+
+    const actualMax =
+      Object.values(qmap).reduce(
+        function (sum, q) {
+          return sum + (Number(q.Marks) || 1);
+        },
+        0
+      );
+
+    const max = Math.max(
+      1,
+      Math.min(
+        maxConfigured,
+        actualMax || maxConfigured
+      )
+    );
+
+    if (marks > max) {
+      marks = max;
+    }
+
+
+    /*
+     * Candidate sheet
+     */
+    const sh =
+      sheet_(SHEETS.admissionCandidates);
+
+    const h = headers_(sh);
+    const existing = values_(sh);
+
+    const mobileCol =
+      h.indexOf('Mobile');
+
+    const nameCol =
+      h.indexOf('Student Name');
+
+    const testCol =
+      h.indexOf('Test ID');
+
+
+    /*
+     * Duplicate submission protection
+     */
+    if (
+      existing.some(function (r) {
+
+        return (
+          norm_(r[testCol]) === tid &&
+          norm_(r[mobileCol]) === mobile &&
+          norm_(r[nameCol]).toLowerCase() ===
+            name.toLowerCase()
+        );
+
+      })
+    ) {
+
+      throw new Error(
+        'A submission for this student and mobile number already exists for this test.'
+      );
+
+    }
+
+
+    /*
+     * Application number
+     */
+    const app =
+      'ADM-' +
+      new Date()
+        .getTime()
+        .toString(36)
+        .toUpperCase() +
+      '-' +
+      Math.floor(Math.random() * 900 + 100);
+
+
+    /*
+     * Build candidate object using headers.
+     *
+     * This is safer than relying on fixed column positions,
+     * because Medium and Stream were added to the sheet.
+     */
+    const row = new Array(h.length).fill('');
+
+    function put(field, value) {
+      const index = h.indexOf(field);
+
+      if (index >= 0) {
+        row[index] = value;
+      }
+    }
+
+
+    put(
+      'Candidate ID',
+      'CAND-' +
+      Utilities.getUuid().slice(0, 8)
+    );
+
+    put('Created At', new Date());
+    put('Test ID', tid);
+    put('Academic Year', test.academicYear);
+    put('Class', studentClass);
+    put('Trade', test.trade);
+    put('Job Role', test.jobRole);
+    put('Application No', app);
+    put('Roll Number', rollNumber);
+    put('Student Name', name);
+    put("Father's Name", father);
+    put('Mobile', mobile);
+
+    put('Medium', medium);
+    put('Stream', finalStream);
+
+    put('Marks', marks);
+    put('Max Marks', max);
+
+    put(
+      'Percentage',
+      max
+        ? Math.round((marks / max) * 10000) / 100
+        : 0
+    );
+
+    put('Rank', '');
+    put('Status', 'Pending');
+    put('Tie Breaker', 0);
+    put('Notes', 'Online Admission Test');
+
+
+    /*
+     * Save candidate
+     */
+    sh.appendRow(row);
+
+
+    /*
+     * Rebuild merit list using the existing system.
+     */
+    const result =
+      admissionRebuildMerit_(tid);
+
+
+    const me =
+      result.merit.find(function (x) {
+        return x.applicationNo === app;
+      }) || {};
+
+
+    audit_(
+      'ADMISSION_ONLINE_SUBMIT',
+      name +
+      ' / ' +
+      tid +
+      ' / ' +
+      medium +
+      ' / ' +
+      finalStream
+    );
+
+
+    /*
+     * Return result to frontend
+     */
+    return {
+      applicationNo: app,
+      marks: marks,
+      maxMarks: max,
+      percentage: max
+        ? Math.round((marks / max) * 10000) / 100
+        : 0,
+      rank: me.rank || '',
+      status: me.status || 'Pending',
+      answered: answered,
+      totalQuestions: Object.keys(qmap).length,
+
+      /*
+       * Also return submitted student details.
+       */
+      studentName: name,
+      fatherName: father,
+      class: studentClass,
+      medium: medium,
+      stream: finalStream,
+      mobile: mobile,
+      rollNumber: rollNumber
+    };
+  }
+
+
+  /*
+   * Run once when this block is loaded.
+   *
+   * It does NOT create a new sheet.
+   * It only adds missing Medium/Stream headers to the
+   * existing Admission Test Candidates sheet.
+   */
+  try {
+    admissionEnsureStudentDetailColumns_();
+  } catch (e) {
+    console.log(
+      'Admission detail column setup:',
+      e.message
+    );
+  }
+
+})();
