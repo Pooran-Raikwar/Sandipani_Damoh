@@ -8,6 +8,9 @@ function openModal(html){$('adModalBody').innerHTML=html;$('adModal').classList.
 function closeModal(){if(timer){clearInterval(timer);timer=null;}$('adModal').classList.add('hidden');}
 $('adClose').onclick=closeModal;
 $('refreshTests').onclick=loadTests;
+window.closeModal=closeModal;
+window.startDetails=startDetails;
+window.beginExam=beginExam;
 
 async function loadTests(){
   $('testGrid').innerHTML='<div class="ad-empty"><div>⏳</div><h3>Loading tests…</h3><p>Checking the current admission schedule.</p></div>';
@@ -19,13 +22,17 @@ async function loadTests(){
   }catch(e){$('availableCount').textContent='0';$('testGrid').innerHTML='<div class="ad-empty"><div>⚠️</div><h3>Admission service unavailable</h3><p>Please refresh after checking the internet connection.</p></div>';}
 }
 function startDetails(testId){
-  openModal(`<div><span class="ad-kicker">STEP 02 • STUDENT VERIFICATION</span><h2>Enter your details</h2><p class="result-note">These details are attached to your admission test submission.</p><div class="ad-form-grid"><div class="ad-field"><label>Student Name *</label><input id="stName" maxlength="80" autocomplete="name"></div><div class="ad-field"><label>Father's Name *</label><input id="stFather" maxlength="80"></div><div class="ad-field"><label>Mobile Number *</label><input id="stMobile" maxlength="10" inputmode="numeric" autocomplete="tel"></div><div class="ad-field"><label>Roll Number (optional)</label><input id="stRoll" maxlength="20"></div></div><div class="ad-actions"><button class="ad-btn outline" onclick="closeModal()">Cancel</button><button class="ad-btn primary" onclick='beginExam(${JSON.stringify(testId)})'>Continue to Test →</button></div></div>`);
+  const t=tests.find(x=>String(x.testId)===String(testId));
+  const cls=String(t&&t.class||'').trim();
+  const senior=cls==='11th'||cls==='12th';
+  openModal(`<div><span class="ad-kicker">STEP 02 • STUDENT VERIFICATION</span><h2>Enter your details</h2><p class="result-note">Fill in your details before starting the admission test.</p><div class="ad-form-grid"><div class="ad-field"><label>Student Name *</label><input id="stName" maxlength="80" autocomplete="name"></div><div class="ad-field"><label>Father's Name *</label><input id="stFather" maxlength="80"></div><div class="ad-field"><label>Class</label><input id="stClass" value="${esc(cls)}" readonly></div><div class="ad-field"><label>Medium *</label><select id="stMedium"><option value="">Select Medium</option><option value="Hindi">Hindi</option><option value="English">English</option></select></div><div class="ad-field"><label>Mobile Number *</label><input id="stMobile" maxlength="10" inputmode="numeric" autocomplete="tel"></div><div class="ad-field"><label>Roll Number (optional)</label><input id="stRoll" maxlength="20"></div>${senior?`<div class="ad-field"><label>Stream *</label><select id="stStream"><option value="">Select Stream</option><option value="Mathematics">Mathematics</option><option value="Biology">Biology</option><option value="Arts">Arts</option><option value="Commerce">Commerce</option></select></div>`:''}</div><div class="ad-actions"><button class="ad-btn outline" onclick="closeModal()">Cancel</button><button class="ad-btn primary" onclick='beginExam(${JSON.stringify(testId)})'>Continue to Test →</button></div></div>`);
 }
 async function beginExam(testId){
-  const name=$('stName').value.trim(),father=$('stFather').value.trim(),mobile=$('stMobile').value.trim(),roll=$('stRoll').value.trim();
-  if(!name||!father||!/^\d{10}$/.test(mobile)){alert('Please enter student name, father name and a valid 10-digit mobile number.');return;}
+  const name=$('stName').value.trim(),father=$('stFather').value.trim(),mobile=$('stMobile').value.trim(),roll=$('stRoll').value.trim(),cls=$('stClass').value.trim(),medium=$('stMedium').value,streamEl=$('stStream'),stream=streamEl?streamEl.value:'';
+  if(!name||!father||!cls||!medium||!/^\d{10}$/.test(mobile)){alert('Please fill Student Name, Father’s Name, Class, Medium and a valid 10-digit mobile number.');return;}
+  if((cls==='11th'||cls==='12th')&&!stream){alert('Please select your Stream.');return;}
   try{
-    activeTest=await API.getAdmissionPublicTest(testId); student={name,father,mobile,roll};answers={};index=0;seconds=Math.max(10*60,Math.min(60*60,(activeTest.questions.length||10)*90));renderQuestion();startTimer();
+    activeTest=await API.getAdmissionPublicTest(testId); student={name,father,mobile,roll,class:cls,medium,stream:stream||''};answers={};index=0;seconds=Math.max(10*60,Math.min(60*60,(activeTest.questions.length||10)*90));renderQuestion();startTimer();
   }catch(e){alert(e.message||'Unable to open this test.');await loadTests();}
 }
 function startTimer(){if(timer)clearInterval(timer);timer=setInterval(()=>{seconds--;renderTimer();if(seconds<=0){clearInterval(timer);timer=null;submit(true);}},1000);renderTimer();}
@@ -42,7 +49,7 @@ async function submit(auto){
   if(!auto&&!confirm('Submit your admission test now? You will not be able to edit answers after submission.'))return;
   if(timer){clearInterval(timer);timer=null;}
   try{
-    const r=await API.submitAdmissionTest({testId:activeTest.testId,studentName:student.name,fatherName:student.father,mobile:student.mobile,rollNumber:student.roll,answers});
+    const r=await API.submitAdmissionTest({testId:activeTest.testId,studentName:student.name,fatherName:student.father,mobile:student.mobile,rollNumber:student.roll,class:student.class,medium:student.medium,stream:student.stream,answers});
     openModal(`<div class="result-box"><span class="ad-kicker">ADMISSION TEST SUBMITTED</span><h2>${auto?'Time expired — your test was submitted automatically.':'Your test has been submitted successfully.'}</h2><div class="result-score">${esc(r.percentage)}%</div><div class="result-meta"><div><small>Marks</small><b>${esc(r.marks)} / ${esc(r.maxMarks)}</b></div><div><small>Rank</small><b>${esc(r.rank||'Pending')}</b></div><div><small>Status</small><b>${esc(r.status||'Pending')}</b></div><div><small>Answered</small><b>${esc(r.answered)} / ${esc(r.totalQuestions)}</b></div></div><div class="application-code">Application No.: ${esc(r.applicationNo)}</div><p class="result-note">Keep this application number for your records. Final admission selection remains subject to the school's admission process and merit review.</p><div class="ad-actions"><button class="ad-btn primary" onclick="closeModal();loadTests();window.scrollTo({top:0,behavior:'smooth'})">Back to Admission Centre</button></div></div>`);
   }catch(e){alert(e.message||'Submission failed. Please try again.');startTimer();}
 }
