@@ -1174,3 +1174,190 @@ function doGet(e){if(e&&e.parameter&&e.parameter.action)return api_(e);return js
   }
 
 })();
+/* =========================================================
+   SANDIPANI ADMISSION TEST - VERIFIED BACKEND FIX
+   Paste this block at the VERY END of backend/Code.gs
+   Then DEPLOY A NEW VERSION of the Web App.
+
+   Fixes:
+   1. Publicly opened tests load for ALL students of the selected class.
+   2. A test is never blocked by seat count; seats are only used for merit.
+   3. Student Class/Medium/Stream are validated and saved.
+   4. Online submission writes by column header, so added Medium/Stream
+      columns do not break the existing Candidate sheet.
+   5. Replaces the old admissionSubmit_ correctly at global scope.
+   ========================================================= */
+
+function admissionEnsureStudentDetailColumns_(){
+  setup_();
+  const sh=sheet_(SHEETS.admissionCandidates);
+  let h=headers_(sh);
+  ['Medium','Stream'].forEach(function(name){
+    if(h.indexOf(name)<0){
+      sh.getRange(1,sh.getLastColumn()+1).setValue(name);
+      h=headers_(sh);
+    }
+  });
+  return sh;
+}
+
+/* IMPORTANT: assignment at global scope replaces the original function.
+   An inner function inside an IIFE would NOT replace route_()'s function. */
+admissionSubmit_ = function(d){
+  admissionEnsureStudentDetailColumns_();
+  d=d||{};
+
+  const tid=norm_(d.testId);
+  const test=admissionPublicTest_(tid);
+  const name=norm_(d.studentName);
+  const father=norm_(d.fatherName);
+  const mobile=norm_(d.mobile);
+  const rollNumber=norm_(d.rollNumber);
+  const submittedClass=norm_(d.class || d.Class);
+  const medium=norm_(d.medium);
+  const stream=norm_(d.stream);
+
+  if(!name) throw new Error('Student name is required.');
+  if(!father) throw new Error("Father's name is required.");
+  if(!/^\d{10}$/.test(mobile)) throw new Error('Please enter a valid 10-digit mobile number.');
+
+  const testClass=norm_(test.class);
+  if(!submittedClass) throw new Error('Please select/confirm your class.');
+  if(submittedClass!==testClass){
+    throw new Error('This test is for Class '+testClass+' only. Please open the test for your class.');
+  }
+
+  if(medium!=='Hindi' && medium!=='English'){
+    throw new Error('Please select Hindi or English medium.');
+  }
+
+  const higher=(testClass==='11th'||testClass==='12th');
+  const validStreams=['Mathematics','Biology','Arts','Commerce'];
+  if(higher){
+    if(validStreams.indexOf(stream)<0) throw new Error('Please select a valid stream for Class '+testClass+'.');
+  }
+  const finalStream=higher?stream:'';
+
+  const answers=d.answers||{};
+  const qsh=sheet_(SHEETS.admissionQuestions);
+  const qh=headers_(qsh);
+  const qr=values_(qsh);
+  const qmap={};
+  qr.map(function(r){return obj_(qh,r);})
+    .filter(function(q){return norm_(q['Test ID'])===tid && String(q.Active).toLowerCase()!=='no';})
+    .forEach(function(q){qmap[q['Question ID']]=q;});
+
+  if(!Object.keys(qmap).length) throw new Error('Questions are not available for this test yet.');
+
+  let marks=0,answered=0;
+  Object.keys(qmap).forEach(function(id){
+    const q=qmap[id];
+    const a=Number(answers[id]);
+    if(Number.isInteger(a)){
+      answered++;
+      if(a===Number(q.Correct)) marks+=Number(q.Marks)||1;
+    }
+  });
+
+  const maxConfigured=Number(test.maxMarks)||100;
+  const actualMax=Object.keys(qmap).reduce(function(sum,id){return sum+(Number(qmap[id].Marks)||1);},0);
+  const max=Math.max(1,Math.min(maxConfigured,actualMax||maxConfigured));
+  if(marks>max) marks=max;
+
+  const sh=sheet_(SHEETS.admissionCandidates);
+  const h=headers_(sh);
+  const existing=values_(sh);
+  const testCol=h.indexOf('Test ID');
+  const mobileCol=h.indexOf('Mobile');
+  const nameCol=h.indexOf('Student Name');
+
+  if(testCol<0 || mobileCol<0 || nameCol<0){
+    throw new Error('Admission candidate sheet headers are incomplete. Please run system setup once.');
+  }
+
+  if(existing.some(function(r){
+    return norm_(r[testCol])===tid &&
+      norm_(r[mobileCol])===mobile &&
+      norm_(r[nameCol]).toLowerCase()===name.toLowerCase();
+  })){
+    throw new Error('A submission for this student and mobile number already exists for this test.');
+  }
+
+  const app='ADM-'+new Date().getTime().toString(36).toUpperCase()+'-'+Math.floor(Math.random()*900+100);
+  const row=new Array(h.length).fill('');
+  function put(field,value){
+    const i=h.indexOf(field);
+    if(i>=0) row[i]=value;
+  }
+
+  put('Candidate ID','CAND-'+Utilities.getUuid().slice(0,8));
+  put('Created At',new Date());
+  put('Test ID',tid);
+  put('Academic Year',test.academicYear);
+  put('Class',testClass);
+  put('Trade',test.trade);
+  put('Job Role',test.jobRole);
+  put('Application No',app);
+  put('Roll Number',rollNumber);
+  put('Student Name',name);
+  put("Father's Name",father);
+  put('Mobile',mobile);
+  put('Medium',medium);
+  put('Stream',finalStream);
+  put('Marks',marks);
+  put('Max Marks',max);
+  put('Percentage',max?Math.round((marks/max)*10000)/100:0);
+  put('Rank','');
+  put('Status','Pending');
+  put('Tie Breaker',0);
+  put('Notes','Online Admission Test');
+
+  sh.appendRow(row);
+
+  const result=admissionRebuildMerit_(tid);
+  const me=result.merit.find(function(x){return x.applicationNo===app;})||{};
+  audit_('ADMISSION_ONLINE_SUBMIT',name+' / '+tid+' / '+testClass+' / '+medium+' / '+finalStream);
+
+  return {
+    applicationNo:app,
+    marks:marks,
+    maxMarks:max,
+    percentage:max?Math.round((marks/max)*10000)/100:0,
+    rank:me.rank||'',
+    status:me.status||'Pending',
+    answered:answered,
+    totalQuestions:Object.keys(qmap).length,
+    studentName:name,
+    fatherName:father,
+    class:testClass,
+    medium:medium,
+    stream:finalStream,
+    mobile:mobile,
+    rollNumber:rollNumber
+  };
+};
+
+/* Public list: OPEN tests are available to every student. Total Seats is
+   deliberately NOT used as an eligibility/participation limit. */
+admissionPublicTests_ = function(){
+  setup_();
+  const tests=contentRows_(SHEETS.admissionTests)
+    .filter(function(x){return norm_(x.Status).toLowerCase()==='open';});
+  const qsh=sheet_(SHEETS.admissionQuestions),qh=headers_(qsh),qr=values_(qsh);
+  return tests.map(function(t){
+    const qs=qr.map(function(r){return obj_(qh,r);})
+      .filter(function(q){return norm_(q['Test ID'])===norm_(t['Test ID']) && String(q.Active).toLowerCase()!=='no';});
+    return {
+      testId:t['Test ID'],
+      academicYear:t['Academic Year'],
+      class:t.Class,
+      trade:t.Trade,
+      jobRole:t['Job Role'],
+      testDate:t['Test Date'],
+      maxMarks:Number(t['Max Marks'])||100,
+      totalSeats:Number(t['Total Seats'])||0,
+      questionCount:qs.length,
+      notes:t.Notes||''
+    };
+  });
+};
