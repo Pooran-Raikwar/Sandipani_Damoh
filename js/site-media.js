@@ -87,6 +87,7 @@
       const url=result?.url||'';
       /* Immediate local UI update — no page reload and no second API round-trip. */
       updateImages(key,url);
+      try{localStorage.removeItem('sandipani_site_media_cache_v1');}catch(e){}
       if(btn){btn.textContent='✓ Updated';}
       input.value='';
       setTimeout(()=>{if(btn){btn.disabled=false;btn.textContent=old;}},1200);
