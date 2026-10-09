@@ -1655,4 +1655,38 @@ siteMediaDelete_=function(pin,key){
 };
 
 /* END OF SAFE APPEND PATCH */
+/* =========================================================
+   STUDENT REGISTRATION CONTROL - APPEND ONLY
+   Paste this block at the VERY END of Code.gs.
+   Existing backend code must remain unchanged.
+   ========================================================= */
+(function () {
+  'use strict';
+  function registrationControl_() {
+    setup_(); const rows=values_(sheet_(SHEETS.config)); let control=null;
+    rows.forEach(function(r){if(norm_(r[0])==='RegistrationControl'){try{control=JSON.parse(String(r[1]||''));}catch(e){control=null;}}});
+    control=control||{enabled:true,startAt:'',endAt:''}; control.enabled=control.enabled!==false; control.startAt=norm_(control.startAt); control.endAt=norm_(control.endAt); return control;
+  }
+  function registrationIsOpen_(){const c=registrationControl_();if(!c.enabled)return false;const now=new Date();if(c.startAt){const s=new Date(c.startAt);if(!isNaN(s.getTime())&&now<s)return false;}if(c.endAt){const e=new Date(c.endAt);if(!isNaN(e.getTime())&&now>e)return false;}return true;}
+  function config_(){setup_();const out={};values_(sheet_(SHEETS.config)).forEach(function(r){const key=norm_(r[0]);if(!key||key==='RegistrationControl')return;out[key]=norm_(r[1]).split('|').filter(Boolean);});out.registrationControl=registrationControl_();return Object.assign({},CONFIG_DEFAULTS,out);}
+  function saveConfig_(pin,cfg){
+    if(!verify_(pin))throw new Error('Invalid Admin PIN'); setup_(); cfg=cfg||{};
+    const control=cfg.registrationControl||{}; const cleanControl={enabled:control.enabled!==false,startAt:norm_(control.startAt),endAt:norm_(control.endAt)};
+    if(cleanControl.startAt&&isNaN(new Date(cleanControl.startAt).getTime()))throw new Error('Invalid registration opening date/time.');
+    if(cleanControl.endAt&&isNaN(new Date(cleanControl.endAt).getTime()))throw new Error('Invalid registration closing date/time.');
+    if(cleanControl.startAt&&cleanControl.endAt&&new Date(cleanControl.endAt)<=new Date(cleanControl.startAt))throw new Error('Registration closing time must be after opening time.');
+    const sh=sheet_(SHEETS.config), existing=values_(sh), map={}, order=[];
+    existing.forEach(function(r){const k=norm_(r[0]);if(k&&!Object.prototype.hasOwnProperty.call(map,k))order.push(k);if(k)map[k]=norm_(r[1]);});
+    const standard={academicYears:cfg.academicYears||[],sections:cfg.sections||[],additionalSubjects:cfg.additionalSubjects||CONFIG_DEFAULTS.additionalSubjects,itReplacement:cfg.itReplacement||CONFIG_DEFAULTS.itReplacement};
+    Object.keys(standard).forEach(function(k){if(!Object.prototype.hasOwnProperty.call(map,k))order.push(k);map[k]=standard[k].map(norm_).filter(Boolean).join('|');});
+    if(!Object.prototype.hasOwnProperty.call(map,'RegistrationControl'))order.push('RegistrationControl'); map.RegistrationControl=JSON.stringify(cleanControl);
+    sh.clearContents(); sh.getRange(1,1,1,2).setValues([['Key','Value']]); order.forEach(function(k){sh.appendRow([k,map[k]||'']);});
+    audit_('SAVE_CONFIG','Academic years/sections/registration control updated'); return config_();
+  }
+  function registerStudent(data){
+    if(!registrationIsOpen_()){const c=registrationControl_();if(c.startAt&&new Date()<new Date(c.startAt))throw new Error('Student registration is not open yet.');throw new Error('Student registration is currently closed.');}
+    setup_(); validateStudent_(data); const sh=sheet_(SHEETS.students),h=headers_(sh); const row=h.map(function(k){return k==='Timestamp'?new Date():(data[k]!==undefined?data[k]:(k==='Status'?'Active':''));});
+    sh.appendRow(row); audit_('ADD_STUDENT',norm_(data['Student Name'])); return {id:sh.getLastRow()-1};
+  }
+})();
 
