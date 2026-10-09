@@ -1361,3 +1361,298 @@ admissionPublicTests_ = function(){
     };
   });
 };
+/* ================================================================
+   SANDIPANI - SAFE BACKEND APPEND PATCH
+   Paste this COMPLETE block at the VERY END of Code.gs.
+   DO NOT delete/replace existing Code.gs.
+
+   Fixes:
+   1) Admission Test Admin data remains compatible after Medium/Stream
+      columns are added.
+   2) Public OPEN admission tests are available by their configured class;
+      Total Seats does NOT block students from taking the test.
+   3) Online admission submission saves Medium + Stream safely by header.
+   4) Books/Notes accept Previous Year Paper as a normal resource title.
+      No new sheet or design is required.
+   5) Site profile/logo public metadata uses short CacheService caching;
+      save/delete automatically clears the cache.
+   ================================================================ */
+
+/* ---------- 1. Admission candidate columns ---------- */
+function admissionEnsureStudentDetailColumns_(){
+  setup_();
+  const sh=sheet_(SHEETS.admissionCandidates);
+  let h=headers_(sh);
+  ['Medium','Stream'].forEach(function(name){
+    if(h.indexOf(name)<0){
+      sh.getRange(1,sh.getLastColumn()+1).setValue(name);
+      h=headers_(sh);
+    }
+  });
+  return sh;
+}
+
+/* ---------- 2. Admin-side candidate save: HEADER SAFE ---------- */
+admissionSaveCandidate_=function(pin,d){
+  if(!verify_(pin))throw new Error('Invalid Admin PIN');
+  admissionEnsureStudentDetailColumns_();
+  d=d||{};
+
+  const tid=norm_(d.testId);
+  if(!tid)throw new Error('Select an admission test.');
+  const tests=admissionTestList_(pin);
+  const t=tests.find(function(x){return norm_(x['Test ID'])===tid;});
+  if(!t)throw new Error('Admission test not found.');
+
+  const name=norm_(d.studentName), app=norm_(d.applicationNo);
+  if(!name||!app)throw new Error('Application No. and Student Name are required.');
+
+  const max=Number(t['Max Marks'])||100;
+  const marks=Number(d.marks);
+  if(!Number.isFinite(marks)||marks<0||marks>max)
+    throw new Error('Marks must be between 0 and '+max+'.');
+
+  const studentClass=norm_(t.Class);
+  const medium=norm_(d.medium);
+  const stream=norm_(d.stream);
+  if(medium && medium!=='Hindi' && medium!=='English')
+    throw new Error('Medium must be Hindi or English.');
+  if(studentClass==='11th'||studentClass==='12th'){
+    if(stream && ['Mathematics','Biology','Arts','Commerce'].indexOf(stream)<0)
+      throw new Error('Invalid stream selected.');
+  }
+
+  const sh=sheet_(SHEETS.admissionCandidates),h=headers_(sh),rows=values_(sh);
+  const id=norm_(d.id)||admissionId_('CAND');
+  const ii=h.indexOf('Candidate ID');
+  const idx=rows.findIndex(function(r){return norm_(r[ii])===id;});
+  const row=new Array(h.length).fill('');
+
+  function put(field,value){
+    const i=h.indexOf(field);
+    if(i>=0)row[i]=value;
+  }
+
+  put('Candidate ID',id);
+  put('Created At',idx>=0?rows[idx][h.indexOf('Created At')]:new Date());
+  put('Test ID',tid);
+  put('Academic Year',t['Academic Year']);
+  put('Class',studentClass);
+  put('Trade',t.Trade);
+  put('Job Role',t['Job Role']);
+  put('Application No',app);
+  put('Roll Number',norm_(d.rollNumber));
+  put('Student Name',name);
+  put("Father's Name",norm_(d.fatherName));
+  put('Mobile',norm_(d.mobile));
+  put('Medium',medium);
+  put('Stream',(studentClass==='11th'||studentClass==='12th')?stream:'');
+  put('Marks',marks);
+  put('Max Marks',max);
+  put('Percentage',Math.round((marks/max)*10000)/100);
+  put('Rank','');
+  put('Status',norm_(d.status)||'Pending');
+  put('Tie Breaker',Number(d.tieBreaker)||0);
+  put('Notes',norm_(d.notes));
+
+  if(idx>=0)sh.getRange(idx+2,1,1,h.length).setValues([row]);
+  else sh.appendRow(row);
+
+  const result=admissionRebuildMerit_(tid);
+  audit_('ADMISSION_CANDIDATE_SAVE',name+' / '+tid);
+  return result;
+};
+
+/* ---------- 3. Public admission test list ---------- */
+admissionPublicTests_=function(){
+  setup_();
+  const sh=sheet_(SHEETS.admissionTests),h=headers_(sh);
+  const rows=values_(sh).map(function(r){return obj_(h,r);});
+  const qsh=sheet_(SHEETS.admissionQuestions),qh=headers_(qsh),qr=values_(qsh);
+
+  return rows
+    .filter(function(t){return norm_(t.Status).toLowerCase()==='open';})
+    .map(function(t){
+      const qs=qr.map(function(r){return obj_(qh,r);}).filter(function(q){
+        return norm_(q['Test ID'])===norm_(t['Test ID']) && String(q.Active).toLowerCase()!=='no';
+      });
+      return {
+        testId:t['Test ID'],
+        academicYear:t['Academic Year'],
+        class:t.Class,
+        trade:t.Trade,
+        jobRole:t['Job Role'],
+        testDate:t['Test Date'],
+        maxMarks:Number(t['Max Marks'])||100,
+        totalSeats:Number(t['Total Seats'])||0,
+        questionCount:qs.length,
+        notes:t.Notes||''
+      };
+    });
+};
+
+/* ---------- 4. Public submission: HEADER SAFE ---------- */
+admissionSubmit_=function(d){
+  admissionEnsureStudentDetailColumns_();
+  d=d||{};
+
+  const tid=norm_(d.testId);
+  if(!tid)throw new Error('Please select an admission test.');
+  const test=admissionPublicTest_(tid);
+  const name=norm_(d.studentName);
+  const father=norm_(d.fatherName);
+  const mobile=norm_(d.mobile);
+  const rollNumber=norm_(d.rollNumber);
+  const submittedClass=norm_(d.class||d.Class);
+  const medium=norm_(d.medium);
+  const stream=norm_(d.stream);
+
+  if(!name)throw new Error('Student name is required.');
+  if(!father)throw new Error("Father's name is required.");
+  if(!/^\d{10}$/.test(mobile))throw new Error('Please enter a valid 10-digit mobile number.');
+
+  const testClass=norm_(test.class);
+  if(submittedClass && submittedClass!==testClass)
+    throw new Error('This test is for Class '+testClass+' only.');
+  if(medium!=='Hindi'&&medium!=='English')
+    throw new Error('Please select Hindi or English medium.');
+
+  const higher=testClass==='11th'||testClass==='12th';
+  const validStreams=['Mathematics','Biology','Arts','Commerce'];
+  if(higher && validStreams.indexOf(stream)<0)
+    throw new Error('Please select a valid stream for Class '+testClass+'.');
+
+  const answers=d.answers||{};
+  const qsh=sheet_(SHEETS.admissionQuestions),qh=headers_(qsh),qr=values_(qsh);
+  const qmap={};
+  qr.map(function(r){return obj_(qh,r);}).filter(function(q){
+    return norm_(q['Test ID'])===tid && String(q.Active).toLowerCase()!=='no';
+  }).forEach(function(q){qmap[q['Question ID']]=q;});
+  if(!Object.keys(qmap).length)throw new Error('Questions are not available for this test yet.');
+
+  let marks=0,answered=0;
+  Object.keys(qmap).forEach(function(id){
+    const q=qmap[id], a=Number(answers[id]);
+    if(Number.isInteger(a)){
+      answered++;
+      if(a===Number(q.Correct))marks+=Number(q.Marks)||1;
+    }
+  });
+
+  const configuredMax=Number(test.maxMarks)||100;
+  const actualMax=Object.keys(qmap).reduce(function(s,id){return s+(Number(qmap[id].Marks)||1);},0);
+  const max=Math.max(1,Math.min(configuredMax,actualMax||configuredMax));
+  if(marks>max)marks=max;
+
+  const sh=sheet_(SHEETS.admissionCandidates),h=headers_(sh),existing=values_(sh);
+  const tc=h.indexOf('Test ID'),mc=h.indexOf('Mobile'),nc=h.indexOf('Student Name');
+  if(tc<0||mc<0||nc<0)throw new Error('Admission candidate sheet headers are incomplete.');
+
+  if(existing.some(function(r){
+    return norm_(r[tc])===tid && norm_(r[mc])===mobile &&
+      norm_(r[nc]).toLowerCase()===name.toLowerCase();
+  }))throw new Error('A submission for this student and mobile number already exists for this test.');
+
+  const app='ADM-'+new Date().getTime().toString(36).toUpperCase()+'-'+Math.floor(Math.random()*900+100);
+  const row=new Array(h.length).fill('');
+  function put(field,value){const i=h.indexOf(field);if(i>=0)row[i]=value;}
+
+  put('Candidate ID','CAND-'+Utilities.getUuid().slice(0,8));
+  put('Created At',new Date());
+  put('Test ID',tid);
+  put('Academic Year',test.academicYear);
+  put('Class',testClass);
+  put('Trade',test.trade);
+  put('Job Role',test.jobRole);
+  put('Application No',app);
+  put('Roll Number',rollNumber);
+  put('Student Name',name);
+  put("Father's Name",father);
+  put('Mobile',mobile);
+  put('Medium',medium);
+  put('Stream',higher?stream:'');
+  put('Marks',marks);
+  put('Max Marks',max);
+  put('Percentage',Math.round((marks/max)*10000)/100);
+  put('Rank','');
+  put('Status','Pending');
+  put('Tie Breaker',0);
+  put('Notes','Online Admission Test');
+  sh.appendRow(row);
+
+  const result=admissionRebuildMerit_(tid);
+  const me=result.merit.find(function(x){return x.applicationNo===app;})||{};
+  audit_('ADMISSION_ONLINE_SUBMIT',name+' / '+tid+' / '+testClass+' / '+medium+' / '+(higher?stream:''));
+
+  return {
+    applicationNo:app,marks:marks,maxMarks:max,
+    percentage:Math.round((marks/max)*10000)/100,
+    rank:me.rank||'',status:me.status||'Pending',answered:answered,
+    totalQuestions:Object.keys(qmap).length,studentName:name,fatherName:father,
+    class:testClass,medium:medium,stream:higher?stream:'',mobile:mobile,rollNumber:rollNumber
+  };
+};
+
+/* ---------- 5. Books / Notes: Previous Year Paper is supported ----------
+   Existing resourceUpload_ already stores any supplied title/name.
+   This wrapper only normalizes the category and common PYQ names; it does
+   NOT create a new sheet or alter the existing UI. */
+resourceUpload_=function(pin,data){
+  if(!verify_(pin))throw new Error('Invalid Admin PIN');
+  setup_(); data=data||{};
+  const category=norm_(data.category)==='Notes'?'Notes':'Books';
+  const cls=norm_(data.Class),medium=norm_(data.Medium);
+  let name=norm_(data.bookName||data.title);
+  if(!['9th','10th','11th','12th'].includes(cls))throw new Error('Class must be 9th, 10th, 11th or 12th.');
+  if(!['Hindi','English'].includes(medium))throw new Error('Medium must be Hindi or English.');
+  if(!name)throw new Error((category==='Books'?'Book':'Note')+' name is required.');
+
+  const b64=String(data.base64||'').replace(/^data:[^;]+;base64,/,'').trim();
+  if(!b64)throw new Error('File data is missing.');
+  const mime=norm_(data.mimeType)||'application/pdf';
+  const bytes=Utilities.base64Decode(b64);
+  if(bytes.length>20*1024*1024)throw new Error('Maximum file size is 20 MB.');
+  const fileName=norm_(data.fileName)||(name.replace(/[^a-zA-Z0-9._-]+/g,'_')+'.pdf');
+  const file=resourceFolder_(category).createFile(Utilities.newBlob(bytes,mime,fileName));
+  try{file.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW);}catch(e){}
+  const id=Utilities.getUuid(),url='https://drive.google.com/uc?export=download&id='+file.getId();
+  sheet_(category==='Books'?SHEETS.books:SHEETS.notes).appendRow([
+    id,new Date(),cls,medium,name,norm_(data.trade)||'Vocational',
+    fileName,file.getId(),url,category,norm_(data.description)
+  ]);
+  audit_('RESOURCE_UPLOAD',category+' / '+name+' / '+cls+' / '+medium);
+  return {id,url,fileName,name,category};
+};
+
+/* ---------- 6. Fast public profile/logo metadata ---------- */
+siteMediaList_=function(){
+  const cache=CacheService.getScriptCache();
+  const cached=cache.get('sandipani_site_media_v1');
+  if(cached){try{return JSON.parse(cached);}catch(e){}}
+
+  setup_();
+  const sh=sheet_(SHEETS.siteMedia),h=headers_(sh),rows=values_(sh).map(function(r){return obj_(h,r);});
+  const by={}; rows.forEach(function(x){by[norm_(x.Key)]=x;});
+  const result=SITE_MEDIA_KEYS.map(function(m){
+    return by[m[0]]||{Key:m[0],Title:m[1],Description:m[2],'File Name':'','File ID':'','Image URL':'','Updated At':''};
+  });
+  try{cache.put('sandipani_site_media_v1',JSON.stringify(result),300);}catch(e){}
+  return result;
+};
+
+const _sandipaniOriginalSiteMediaSave_=siteMediaSave_;
+siteMediaSave_=function(pin,data){
+  const result=_sandipaniOriginalSiteMediaSave_(pin,data);
+  try{CacheService.getScriptCache().remove('sandipani_site_media_v1');}catch(e){}
+  return result;
+};
+
+const _sandipaniOriginalSiteMediaDelete_=siteMediaDelete_;
+siteMediaDelete_=function(pin,key){
+  const result=_sandipaniOriginalSiteMediaDelete_(pin,key);
+  try{CacheService.getScriptCache().remove('sandipani_site_media_v1');}catch(e){}
+  return result;
+};
+
+/* END OF SAFE APPEND PATCH */
+
