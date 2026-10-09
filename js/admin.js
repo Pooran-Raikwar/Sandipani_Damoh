@@ -2,45 +2,8 @@ let adminPin='', records=[], settingsCache=[], configCache={};
 const $=id=>document.getElementById(id);
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
 function msg(t,type='info'){const e=$('adminMessage');e.textContent=t;e.className='message '+type;e.style.display='block';}
-function setAdminLoginBusy(busy,text){
-  const card=$('loginCard'), pin=$('adminPin'), btn=card?.querySelector('button[onclick="adminLogin()"]');
-  if(!card)return;
-  let box=$('adminUnlockStatus');
-  if(busy){
-    if(!box){
-      box=document.createElement('div'); box.id='adminUnlockStatus'; box.className='message';
-      box.style.cssText='margin-top:14px;padding:14px 16px;text-align:center;border-radius:10px;font-weight:600;display:block;';
-      const spinner=document.createElement('span'); spinner.style.cssText='display:inline-block;width:16px;height:16px;border:3px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-3px;margin-right:9px;animation:sandipaniAdminSpin .8s linear infinite;';
-      box.appendChild(spinner); const label=document.createElement('span'); label.id='adminUnlockText'; box.appendChild(label);
-      card.querySelector('.toolbar')?.after(box);
-      if(!document.getElementById('sandipaniAdminUnlockStyle')){const st=document.createElement('style');st.id='sandipaniAdminUnlockStyle';st.textContent='@keyframes sandipaniAdminSpin{to{transform:rotate(360deg)}}';document.head.appendChild(st);}
-    }
-    $('adminUnlockText').textContent=text||'Unlocking Admin Panel…'; box.className='message'; box.style.display='block';
-    if(pin)pin.disabled=true; if(btn){btn.disabled=true;btn.textContent='Unlocking…';}
-  }else{
-    if(box)box.style.display='none'; if(pin)pin.disabled=false; if(btn){btn.disabled=false;btn.textContent='Unlock Admin';}
-  }
-}
-async function adminLogin(){
-  const pin=$('adminPin').value.trim();
-  if(!pin){msg('Enter Admin PIN.','error');return;}
-  setAdminLoginBusy(true,'Verifying Admin PIN…');
-  try{
-    const r=await API.verifyAdmin(pin);
-    if(!r.valid){setAdminLoginBusy(false);msg('Invalid Admin PIN.','error');return;}
-    setAdminLoginBusy(true,'Loading secure Admin Panel…');
-    adminPin=pin;
-    if(window.AdminAuth&&AdminAuth.set)AdminAuth.set(pin,Date.now()+5*60*60*1000);
-    await refreshAll();
-    setAdminLoginBusy(false);
-    $('loginCard').classList.add('hidden');
-    $('adminPanel').classList.remove('hidden');
-    msg('Admin login successful.','success');
-  }catch(e){
-    setAdminLoginBusy(false);
-    msg(e.message||'Admin login failed. Please try again.','error');
-  }
-}
+function adminUnlockUI(on){let e=$('adminUnlockOverlay');if(on){if(!e){document.body.insertAdjacentHTML('beforeend','<div id="adminUnlockOverlay" style="position:fixed;inset:0;background:rgba(248,250,252,.96);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center"><div style="background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:28px;max-width:380px;width:100%;box-shadow:0 18px 50px rgba(15,23,42,.12)"><div style="font-size:42px">🔐</div><h2 style="margin:10px 0 6px">Unlocking Admin Panel…</h2><p style="margin:0;color:#667085">PIN verified. Loading secure admin data. Please wait.</p><div style="height:5px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin-top:18px"><i style="display:block;width:45%;height:100%;background:#0b4fa3;border-radius:99px;animation:sandipaniUnlock 1.1s ease-in-out infinite"></i></div></div></div><style>@keyframes sandipaniUnlock{0%{transform:translateX(-120%)}100%{transform:translateX(240%)}}</style>');}}else{e=$('adminUnlockOverlay');if(e)e.remove();}}
+async function adminLogin(){const pin=$('adminPin').value.trim();if(!pin)return msg('Enter Admin PIN.','error');adminUnlockUI(true);try{const r=await API.verifyAdmin(pin);if(!r.valid){adminUnlockUI(false);return msg('Invalid Admin PIN.','error');}adminPin=pin;if(window.AdminAuth&&AdminAuth.set)AdminAuth.set(pin,Date.now()+5*60*60*1000);await refreshAll();$('loginCard').classList.add('hidden');$('connectionCard')?.classList.remove('hidden');$('adminPanel').classList.remove('hidden');adminUnlockUI(false);msg('Admin login successful.','success');}catch(e){adminUnlockUI(false);msg(e.message||'Unable to unlock Admin Panel.','error');}}
 function logout(){adminPin='';if(window.AdminAuth&&AdminAuth.clear)AdminAuth.clear();$('adminPanel').classList.add('hidden');$('loginCard').classList.remove('hidden');}
 function filters(){return { 'Academic Year':$('fYear').value,'Class':$('fClass').value,'Section':$('fSection').value,'Gender':$('fGender').value,'Stream':$('fStream').value,'IT Subject in Place of This Language':$('fIT').value,search:$('studentSearch').value.trim()};}
 async function refreshAll(){await Promise.all([loadDashboard(),loadStudents(),loadSettings(),loadConfig(),loadGalleryAdmin()]);}
